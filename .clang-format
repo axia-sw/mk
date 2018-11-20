@@ -1,0 +1,37 @@
+BasedOnStyle: WebKit
+Standard: Cpp11
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: ForIndentation
+
+AlignConsecutiveAssignments: true
+
+#AlwaysBreakTemplateDeclarations: Yes
+
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 0
+
+#BreakInheritanceList: BeforeComma
+#BreakStringLiterals: true
+
+IndentPPDirectives: AfterHash
+
+#MaxEmptyLinesToKeep: 1
+#SortIncludes: true
+
+SpaceBeforeParens: Never
+#SpaceBeforeRangeBasedForLoopColon: true
+#SpaceInEmptyParentheses: false
+#SpaceBeforeInheritanceColon: false
+
+#SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: true
+
+PointerAlignment: Right
+
+KeepEmptyLinesAtTheStartOfBlocks: false
