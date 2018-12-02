@@ -235,6 +235,74 @@ int mk_prjfs_isDirOwner( const char *path ) {
 	return 0;
 }
 
+static const char *getFileExtension( const char *p ) {
+	const char *q, *s;
+
+	q = strrchr( p, '.' );
+	if( !q ) {
+		return (const char *)0;
+	}
+
+	if( q[1] == '\0' ) {
+		return (const char *)0;
+	}
+
+	s = strrchr( q, '/' );
+#ifdef _WIN32
+	if( !s ) {
+		s = strrchr( q, '\\' );
+	}
+#endif
+
+	if( s != (const char *)0 ) {
+		return (const char *)0;
+	}
+
+	return q;
+}
+
+static int isExtensionC( const char *ext ) {
+	static const char *const exts[] = {
+		".c", ".C",
+		".m", ".M"
+	};
+	size_t i;
+
+	for( i = 0; i < sizeof( exts ) / sizeof( exts[0] ); ++i ) {
+		if( strcmp( ext, exts[i] ) == 0 ) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+static int isExtensionCPP( const char *ext ) {
+	static const char *const exts[] = {
+		".cc", ".CC",
+		".cpp", ".CPP",
+		".cxx", ".CXX",
+		".c++", ".C++",
+		".mm", ".MM"
+	};
+	size_t i;
+
+	for( i = 0; i < sizeof( exts ) / sizeof( exts[0] ); ++i ) {
+		if( strcmp( ext, exts[i] ) == 0 ) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+static int isExtensionCFamily( const char *ext ) {
+	return isExtensionC( ext ) || isExtensionCPP( ext );
+}
+
+static struct dirent *readDirQuietly( DIR *d ) {
+	errno = 0;
+	return mk_fs_readDir( d );
+}
+
 /* enumerate all source files in a directory */
 static void mk_prj__enumSourceFilesImpl( MkProject proj, const char *srcdir ) {
 	struct dirent *dp;
@@ -250,18 +318,14 @@ static void mk_prj__enumSourceFilesImpl( MkProject proj, const char *srcdir ) {
 		return;
 	}
 
-	while( ( ( errno = 0 ), 1 ) && ( dp = mk_fs_readDir( d ) ) != (struct dirent *)0 ) {
+	while( ( dp = readDirQuietly( d ) ) != (struct dirent *)0 ) {
 		mk_com_strcpy( path, sizeof( path ), srcdir );
 		mk_com_strcat( path, sizeof( path ), dp->d_name );
 
-		p = strrchr( dp->d_name, '.' );
-		if( p != (char *)0 ) {
-			if( *( p + 1 ) == 0 ) {
-				continue;
-			}
-
-			if( !strcmp( p, ".c" ) || !strcmp( p, ".cc" ) || !strcmp( p, ".cpp" ) || !strcmp( p, ".cxx" ) || !strcmp( p, ".c++" ) || !strcmp( p, ".m" ) || !strcmp( p, ".mm" ) ) {
+		if( ( p = (char *)getFileExtension( dp->d_name ) ) != (char *)0 ) {
+			if( isExtensionCFamily( p ) ) {
 				if( !mk_fs_isFile( path ) ) {
+					errno = 0;
 					continue;
 				}
 
@@ -337,18 +401,14 @@ static void mk_prj__enumTestSourceFilesImpl( MkProject proj, const char *srcdir 
 		return;
 	}
 
-	while( ( dp = mk_fs_readDir( d ) ) != (struct dirent *)0 ) {
+	while( ( dp = readDirQuietly( d ) ) != (struct dirent *)0 ) {
 		mk_com_strcpy( path, sizeof( path ), srcdir );
 		mk_com_strcat( path, sizeof( path ), dp->d_name );
 
-		p = strrchr( dp->d_name, '.' );
-		if( p ) {
-			if( *( p + 1 ) == 0 ) {
-				continue;
-			}
-
-			if( !strcmp( p, ".c" ) || !strcmp( p, ".cc" ) || !strcmp( p, ".cpp" ) || !strcmp( p, ".cxx" ) || !strcmp( p, ".c++" ) || !strcmp( p, ".m" ) || !strcmp( p, ".mm" ) ) {
+		if( ( p = (char *)getFileExtension( dp->d_name ) ) != (char *)0 ) {
+			if( isExtensionCFamily( p ) ) {
 				if( !mk_fs_isFile( path ) ) {
+					errno = 0;
 					continue;
 				}
 
@@ -411,8 +471,9 @@ int mk_prjfs_calcName( MkProject proj, const char *path, const char *file ) {
 			i++;
 		}
 
-		for( p = &buf[i]; *p > ' '; p++ )
-			;
+		for( p = &buf[i]; *(const unsigned char *)p > ' '; ++p ) {
+			( (void)0 );
+		}
 		if( *p != 0 ) {
 			*p = 0;
 		}

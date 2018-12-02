@@ -658,7 +658,7 @@ static void mk_prj__saveLibDeps( MkProject proj ) {
 		len = strlen( p );
 
 		fwrite( &len, sizeof( len ), 1, fp );
-		fprintf( fp, "%s", p );
+		fwrite( (const void *)p, len, 1, fp );
 	}
 
 	fclose( fp );
@@ -737,6 +737,7 @@ static void mk_prj__loadLibDeps( MkProject proj ) {
 			return;
 		}
 
+		memset( &buf[0], 0, sizeof( buf ) );
 		if( !fread( &buf[0], temp, 1, fp ) ) {
 			fclose( fp );
 #if MK_DEBUG_LIBDEPS_ENABLED
@@ -749,7 +750,6 @@ static void mk_prj__loadLibDeps( MkProject proj ) {
 			}
 			return;
 		}
-		buf[temp] = '\0';
 
 		mk_sl_pushBack( proj->libs, buf );
 	}
@@ -778,9 +778,9 @@ void mk_prj_calcDeps( MkProject proj ) {
 	}
 	proj->status |= kMkProjStat_CalcDeps_Bit;
 
-	/* <BUG> requires rebuild if a library is removed */
+	/* FIXME: requires rebuild if a library is removed */
 	mk_prj__loadLibDeps( proj );
-	/* </BUG> */
+	/* end of fixme */
 
 	mk_prj__expandLibDeps_r( proj );
 	mk_prj__saveLibDeps( proj );
@@ -805,7 +805,7 @@ void mk_prj_calcLibFlags( MkProject proj ) {
 	 *       if the extra libs is referring to a Mk-known library (e.g.,
 	 *       "opengl"), or a command-line setting as well (e.g., "-lGL") as the
 	 *       latter is not very platform friendly. Elsewhere, conditionals could
-	 *       be checked as well. (e.g., "mswin:-lopengl32 linux:-lGL" etc...)
+	 *       be checked too. (e.g., "mswin:-lopengl32 linux:-lGL" etc...)
 	 *       For now, the current system (just extra linker flags) will work.
 	 */
 

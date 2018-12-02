@@ -1443,11 +1443,9 @@ int mk_bld_makeProject( MkProject proj ) {
 	/*
 	 *	NOTE: This appears to be a hack.
 	 */
-	if( !mk_prj_numSourceFiles( proj ) /*&& mk_prj_getType( proj ) != kMkProjTy_DynamicLib*/ ) {
-		/*
+	if( !mk_prj_numSourceFiles( proj ) && mk_prj_getType( proj ) != kMkProjTy_StaticLib ) {
 		mk_log_errorMsg( mk_com_va( "project ^E'%s'^& has no source files!",
 		    mk_prj_getName( proj ) ) );
-		*/
 		return 1;
 	}
 
@@ -1487,23 +1485,31 @@ int mk_bld_makeProject( MkProject proj ) {
 
 	/* link the project's object files together */
 	mk_bld_getBinName( proj, bin, sizeof( bin ) );
-	/*printf("bin: %s\n", bin);*/
-	if( ( proj->config & kMkProjCfg_NeedRelink_Bit ) || mk_bld_shouldLink( bin, numbuilds ) ) {
-		mk_fs_makeDirs( mk_prj_getOutPath( proj ) );
-		mk_sl_makeUnique( proj->libs );
-		mk_prj_calcLibFlags( proj );
+	if( mk_sl_getSize( objs ) > 0 ) {
+		/*printf("bin: %s\n", bin);*/
+		if( ( proj->config & kMkProjCfg_NeedRelink_Bit ) || mk_bld_shouldLink( bin, numbuilds ) ) {
+			mk_fs_makeDirs( mk_prj_getOutPath( proj ) );
+			mk_sl_makeUnique( proj->libs );
+			mk_prj_calcLibFlags( proj );
 
-		/* find the libraries this project needs */
-		lnk = mk_prj_getType( proj ) == kMkProjTy_StaticLib ? "ar" : tool;
-		if( mk_com_shellf( "%s %s", lnk, mk_bld_getLFlags( proj, bin, objs ) ) ) {
-			mk_sl_delete( objs );
-			return 0;
+			lnk = tool;
+			if( mk_prj_getType( proj ) == kMkProjTy_StaticLib ) {
+				lnk = "ar"; /* FIXME: Allow configuration of this. */
+
+				/* We need to delete static libraries first, due to `ar` not fully recreating the library. */
+				mk_fs_remove( bin );
+			}
+
+			if( mk_com_shellf( "%s %s", lnk, mk_bld_getLFlags( proj, bin, objs ) ) ) {
+				mk_sl_delete( objs );
+				return 0;
+			}
+
+			/* dependent projects need to be rebuilt */
+			mk_bld_relinkDeps( proj );
+		} else if( ~mk__g_flags & kMkFlag_FullClean_Bit ) {
+			mk_prj_calcDeps( proj );
 		}
-
-		/* dependent projects need to be rebuilt */
-		mk_bld_relinkDeps( proj );
-	} else if( ~mk__g_flags & kMkFlag_FullClean_Bit ) {
-		mk_prj_calcDeps( proj );
 	}
 
 	/* unit testing */
