@@ -1,0 +1,80 @@
+.TH MK 1
+.SH NAME
+\fBmk\fR \- A simple build system for C/C++ with near zero configuration.
+.SH SYNOPSIS
+.B mk
+[\fIOPTIONS\fR...]
+[\fItargets\fR...]
+.SH DESCRIPTION
+\fBmk\fR is a build system with a focus on inferring build information from
+directory layout and compiler-provided details.
+\fBmk\fR goes so far as to infer which libraries your program needs to link
+against based on the headers it includes when it can.
+Likewise, \fBmk\fR can also generate a header if you're using git(1).
+.SS Expected directory layout
+It's expected that when \fBmk\fR is run it will be done in the "workspace directory"
+of where the projects will be built.
+.SH OPTIONS
+.TP 8n
+\-h, \-\-help
+Show the help message.
+.TP 8n
+\-v, \-\-version
+Show the version information.
+.TP 8n
+\-V, \-\-verbose
+Show the commands that \fBmk\fR invokes.
+.TP 8n
+\-b, \-\-brush
+Remove intermediate files.
+.TP 8n
+\-C, \-\-clean
+Remove \fI.mk-obj/<platform-name>\fR.
+.TP 8n
+\-r, \-\-release
+Build in release mode.
+.TP 8n
+\-R, \-\-rebuild
+Force a rebuild, without cleaning first.
+.TP 8n
+\-T, \-\-test
+Run unit tests.
+.TP 8n
+\-c, \-\-compile\-only
+Just compile; do not link.
+.TP 8n
+\-p, \-\-pedantic
+Enable pedantic warnings.
+.TP 8n
+\-\-[no\-]pthread
+Enable/disable \fB\-pthread\fR compiler flag. [default]
+.TP 8n
+\-H, \-\-print-hierarchy
+Display the project hierarchy. (Useful for determining what \fBmk\fR is doing.)
+.TP 8n
+\-S, \-\-srcdir=<\fIdir\fR>
+Add a source directory. Can also add source directories in a workspace config file.
+.TP 8n
+\-I, \-\-incdir=<\fIdir\fR>
+Add an include search directory. Can also add include directories in a workspace config file.
+.TP 8n
+\-L, \-\-libdir=<\fIdir\fR>
+Add a library search directory. Can also add library directories in a workspace config file.
+.TP 8n
+\-P, \-\-pkgdir=<\fIdir\fR>
+Add a package directory. Can also add package directories in a workspace config file.
+.TP 8n
+\-\-[no\-]color
+Enable or disable colored output.
+.TP 8n
+\-\-ansi\-colors
+When using colored output, use ANSI-based terminal color codes.
+.TP 8n
+\-\-win32\-colors
+When using colored output, use Windows console API commands.
+.TP 8n
+\-\-[no\-]builtin\-autolinks
+Enable built\-in autolinks. [default]
+.TP 8n
+\-\-[no\-]user\-autolinks
+Enable loading of \fImk\-autolinks.txt\fR. [default]
