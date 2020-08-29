@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 #
 #	Makefile for Mk
 #	You could also just build Mk with:
@@ -66,15 +66,15 @@ LINK_CLANG := clang
 LIBS_CLANG :=
 CC_CLANG   := clang
 
-NAME_GCC   := GCC
-LINK_GCC   := gcc
-LIBS_GCC   :=
-CC_GCC     := gcc
+NAME_GCC := GCC
+LINK_GCC := gcc
+LIBS_GCC :=
+CC_GCC   := gcc
 
-CXX_NAME   := $(NAME_$(TOOLCHAIN))
-LINK       := $(LINK_$(TOOLCHAIN))
-LIBS       := $(LIBS_$(TOOLCHAIN))
-CC         := $(CC_$(TOOLCHAIN))
+CXX_NAME := $(NAME_$(TOOLCHAIN))
+LINK     := $(LINK_$(TOOLCHAIN))
+LIBS     := $(LIBS_$(TOOLCHAIN))
+CC       := $(CC_$(TOOLCHAIN))
 
 ROOT_DIR  ?=
 BUILD_DIR ?= $(ROOT_DIR)
@@ -126,23 +126,23 @@ CFLAGS   := $(CFLAGS_ALL) $(CFLAGS_$(CONFIG))
 
 DEPGEN_GCC   := -MD -MP
 DEPGEN_CLANG := -MD -MP
-DEPGEN := $(DEPGEN_$(TOOLCHAIN))
+DEPGEN       := $(DEPGEN_$(TOOLCHAIN))
 
 COMPILEARG_GCC   := -c
 COMPILEARG_CLANG := -c
-COMPILEARG := $(COMPILEARG_$(TOOLCHAIN))
+COMPILEARG       := $(COMPILEARG_$(TOOLCHAIN))
 
 OUTARG_GCC   := -o
 OUTARG_CLANG := -o
-OUTARG := $(OUTARG_$(TOOLCHAIN))
+OUTARG       := $(OUTARG_$(TOOLCHAIN))
 
 LDOUTARG_GCC   := -o
 LDOUTARG_CLANG := -o
-LDOUTARG := $(LDOUTARG_$(TOOLCHAIN))
+LDOUTARG       := $(LDOUTARG_$(TOOLCHAIN))
 
 SHARED_GCC   := -shared
 SHARED_CLANG := -shared
-SHARED := $(SHARED_$(TOOLCHAIN))
+SHARED       := $(SHARED_$(TOOLCHAIN))
 
 LFLAGS_GCC_CLANG_WIN32 := -static -pthread -static-libgcc
 # -Wl,-Bstatic -lpthread -Wl,-Bstatic -lwinpthread
@@ -151,15 +151,15 @@ LFLAGS_GCC_CLANG_COMMON := $(LFLAGS_GCC_CLANG_$(PLATNAME))
 
 LFLAGS_D_GCC   := $(LFLAGS_GCC_CLANG_COMMON)
 LFLAGS_D_CLANG := $(filter-out -pthread,$(LFLAGS_GCC_CLANG_COMMON))
-LFLAGS_D := $(LFLAGS_D_$(TOOLCHAIN))
+LFLAGS_D       := $(LFLAGS_D_$(TOOLCHAIN))
 
-LFLAGS_R_GCC   := $(LFLAGS_GCC_CLANG_COMMON) -s
-LFLAGS_R_CLANG := $(filter-out -pthread,$(LFLAGS_GCC_CLANG_COMMON)) -s
-LFLAGS_R := $(LFLAGS_R_$(TOOLCHAIN))
+LFLAGS_R_GCC   := $(LFLAGS_GCC_CLANG_COMMON)
+LFLAGS_R_CLANG := $(filter-out -pthread,$(LFLAGS_GCC_CLANG_COMMON))
+LFLAGS_R       := $(LFLAGS_R_$(TOOLCHAIN))
 
 DEFARG_GCC   := -D
 DEFARG_CLANG := -D
-DEFARG := $(DEFARG_$(TOOLCHAIN))
+DEFARG       := $(DEFARG_$(TOOLCHAIN))
 
 C_EXT   := .c
 H_EXT   := .h
@@ -185,19 +185,19 @@ EXEFILE_DEBUG   := $(EXENAME)-debug
 EXEFILE_RELEASE := $(EXENAME)
 EXEFILE         := $(EXEFILE_$(CONFIG))
 
-EXE_C_SOURCES     := $(shell find "$(EXE_SRCDIR)" -type f -regextype posix-egrep -regex "[^\.\#]*\.c" $(foreach N,$(NOTPLATFORM),\! -path \*/$(N)/\*))
-EXE_C_OBJECTS_D   := $(patsubst $(EXE_SRCDIR)%,$(OBJDIR_D)%$(OBJ_EXT),$(EXE_C_SOURCES))
-EXE_C_OBJECTS_R   := $(patsubst $(EXE_SRCDIR)%,$(OBJDIR_R)%$(OBJ_EXT),$(EXE_C_SOURCES))
-EXE_OBJECTS_D := $(EXE_C_OBJECTS_D) $(EXE_CXX_OBJECTS_D)
-EXE_OBJECTS_R := $(EXE_C_OBJECTS_R) $(EXE_CXX_OBJECTS_R)
-EXE_DEPENDS_D := $(patsubst %$(OBJ_EXT),%$(DEP_EXT),$(EXE_OBJECTS_D))
-EXE_DEPENDS_R := $(patsubst %$(OBJ_EXT),%$(DEP_EXT),$(EXE_OBJECTS_R))
-EXE_TARGET_D  := $(BINDIR)$(EXEFILE_DEBUG)$(SUFFIX)
-EXE_TARGET_R  := $(BINDIR)$(EXEFILE_RELEASE)$(SUFFIX)
+EXE_C_SOURCES   := $(shell find "$(patsubst %/,%,$(EXE_SRCDIR))" -type f -name "*.c" $(foreach N,$(NOTPLATFORM),\! -path \*/$(N)/\*))
+EXE_C_OBJECTS_D := $(patsubst $(EXE_SRCDIR)%,$(OBJDIR_D)%$(OBJ_EXT),$(EXE_C_SOURCES))
+EXE_C_OBJECTS_R := $(patsubst $(EXE_SRCDIR)%,$(OBJDIR_R)%$(OBJ_EXT),$(EXE_C_SOURCES))
+EXE_OBJECTS_D   := $(EXE_C_OBJECTS_D) $(EXE_CXX_OBJECTS_D)
+EXE_OBJECTS_R   := $(EXE_C_OBJECTS_R) $(EXE_CXX_OBJECTS_R)
+EXE_DEPENDS_D   := $(patsubst %$(OBJ_EXT),%$(DEP_EXT),$(EXE_OBJECTS_D))
+EXE_DEPENDS_R   := $(patsubst %$(OBJ_EXT),%$(DEP_EXT),$(EXE_OBJECTS_R))
+EXE_TARGET_D    := $(BINDIR)$(EXEFILE_DEBUG)$(SUFFIX)
+EXE_TARGET_R    := $(BINDIR)$(EXEFILE_RELEASE)$(SUFFIX)
 
 EXE_TARGET_DEBUG   := $(EXE_TARGET_D)
 EXE_TARGET_RELEASE := $(EXE_TARGET_R)
-EXE_TARGET := $(EXE_TARGET_$(CONFIG))
+EXE_TARGET         := $(EXE_TARGET_$(CONFIG))
 
 EXE_OBJECTS := $(EXE_OBJECTS_D) $(EXE_OBJECTS_R)
 EXE_DEPENDS := $(EXE_DEPENDS_D) $(EXE_DEPENDS_R)
@@ -211,8 +211,14 @@ ALL_TARGETS := $(foreach X,$(ALL_PROJECTS),$($(X)_TARGETS))
 
 CLEANFILES := $(ALL_OBJECTS) $(ALL_DEPENDS) $(ALL_TARGETS)
 
+
+
+
 .PHONY: all debug release install clean
 .IGNORE: clean
+
+
+
 
 all: $(ALL_TARGETS)
 
@@ -230,6 +236,8 @@ install: release
 	install -m 551 -t "$(INSTALLBINDIR)" "$(EXE_TARGET_R)"
 
 
+
+
 $(EXE_C_OBJECTS_D): $(OBJDIR_D)%$(C_EXT)$(OBJ_EXT): $(EXE_SRCDIR)%$(C_EXT) Makefile
 	@mkdir -p $(dir $@)
 	$(info >$<)
@@ -242,6 +250,7 @@ $(EXE_C_OBJECTS_R): $(OBJDIR_R)%$(C_EXT)$(OBJ_EXT): $(EXE_SRCDIR)%$(C_EXT) Makef
 
 
 
+
 $(EXE_TARGET_D): $(EXE_OBJECTS_D)
 	@mkdir -p $(dir $@)
 	$(info <$@)
@@ -251,6 +260,8 @@ $(EXE_TARGET_R): $(EXE_OBJECTS_R)
 	@mkdir -p $(dir $@)
 	$(info <$@)
 	@$(LINK) $(LDOUTARG) "$@" $+ $(LFLAGS_R)
+
+
 
 
 ifneq ($(MAKECMDGOALS),clean)
