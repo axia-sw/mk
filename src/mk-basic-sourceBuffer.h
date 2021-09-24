@@ -49,23 +49,23 @@ int mk_buf_setFunction( MkBuffer text, const char *func );
 
 const char *mk_buf_getFilename( const MkBuffer text );
 const char *mk_buf_getFunction( const MkBuffer text );
-size_t mk_buf_calculateLine( const MkBuffer text );
+size_t      mk_buf_calculateLine( const MkBuffer text );
 
 size_t mk_buf_getLength( const MkBuffer text );
 
-void mk_buf_seek( MkBuffer text, size_t pos );
+void   mk_buf_seek( MkBuffer text, size_t pos );
 size_t mk_buf_tell( const MkBuffer text );
-char *mk_buf_getPtr( MkBuffer text );
+char * mk_buf_getPtr( MkBuffer text );
 
 char mk_buf_read( MkBuffer text );
 char mk_buf_peek( MkBuffer text );
 char mk_buf_lookAhead( MkBuffer text, size_t offset );
-int mk_buf_advanceIfCharEq( MkBuffer text, char ch );
+int  mk_buf_advanceIfCharEq( MkBuffer text, char ch );
 
 void mk_buf_skip( MkBuffer text, size_t offset );
 void mk_buf_skipWhite( MkBuffer text );
 void mk_buf_skipLine( MkBuffer text );
-int mk_buf_skipLineIfStartsWith( MkBuffer text, const char *pszCommentDelim );
+int  mk_buf_skipLineIfStartsWith( MkBuffer text, const char *pszCommentDelim );
 
 int mk_buf_readLine( MkBuffer text, char *dst, size_t dstn );
 

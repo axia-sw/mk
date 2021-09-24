@@ -47,19 +47,22 @@ struct MkLib_s {
 };
 
 MkLib mk_lib_new( void );
-void mk_lib_delete( MkLib lib );
-void mk_lib_deleteAll( void );
-void mk_lib_setName( MkLib lib, const char *name );
-void mk_lib_setFlags( MkLib lib, int sys, const char *flags );
+void  mk_lib_delete( MkLib lib );
+void  mk_lib_deleteAll( void );
+
+void        mk_lib_setName( MkLib lib, const char *name );
+void        mk_lib_setFlags( MkLib lib, int sys, const char *flags );
 const char *mk_lib_getName( MkLib lib );
 const char *mk_lib_getFlags( MkLib lib, int sys );
+
 MkLib mk_lib_prev( MkLib lib );
 MkLib mk_lib_next( MkLib lib );
 MkLib mk_lib_head( void );
 MkLib mk_lib_tail( void );
 MkLib mk_lib_find( const char *name );
 MkLib mk_lib_lookup( const char *name );
+
 void mk_lib_clearAllProcessed( void );
 void mk_lib_clearProcessed( MkLib lib );
 void mk_lib_setProcessed( MkLib lib );
-int mk_lib_isProcessed( MkLib lib );
+int  mk_lib_isProcessed( MkLib lib );

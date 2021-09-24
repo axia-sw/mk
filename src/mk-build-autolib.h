@@ -45,15 +45,18 @@ struct MkAutolink_s {
 };
 
 MkAutolink mk_al_new( void );
-void mk_al_delete( MkAutolink al );
-void mk_al_deleteAll( void );
-void mk_al_setHeader( MkAutolink al, int sys, const char *header );
-void mk_al_setLib( MkAutolink al, const char *libname );
+void       mk_al_delete( MkAutolink al );
+void       mk_al_deleteAll( void );
+
+void        mk_al_setHeader( MkAutolink al, int sys, const char *header );
+void        mk_al_setLib( MkAutolink al, const char *libname );
 const char *mk_al_getHeader( MkAutolink al, int sys );
 const char *mk_al_getLib( MkAutolink al );
-MkAutolink mk_al_find( int sys, const char *header );
-MkAutolink mk_al_lookup( int sys, const char *header );
+
+MkAutolink  mk_al_find( int sys, const char *header );
+MkAutolink  mk_al_lookup( int sys, const char *header );
 const char *mk_al_autolink( int sys, const char *header );
+
 void mk_al_managePackage_r( const char *libname, int sys, const char *incdir );
 
 /*

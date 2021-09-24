@@ -23,7 +23,7 @@
 
 #include "mk-defs-platform.h"
 
-void mk_log_errorMsg( const char *message );
+void             mk_log_errorMsg( const char *message );
 MK_NORETURN void mk_log_fatalError( const char *message );
 
 void mk_log_error( const char *file, unsigned int line, const char *func, const char *message );

@@ -47,11 +47,11 @@
 
 typedef struct MkGitInfo_s *MkGitInfo;
 
-char *mk_git_findRoot( void );
-char *mk_git_findBranchPath( const char *pszGitDir );
-char *mk_git_getCommit( const char *pszBranchFile );
-char *mk_git_getCommitTimestamp( const char *pszBranchFile, const MkStat_t *pStat );
+char *    mk_git_findRoot( void );
+char *    mk_git_findBranchPath( const char *pszGitDir );
+char *    mk_git_getCommit( const char *pszBranchFile );
+char *    mk_git_getCommitTimestamp( const char *pszBranchFile, const MkStat_t *pStat );
 MkGitInfo mk_git_loadInfo( void );
-int mk_git_writeHeader( const char *pszHFilename, MkGitInfo pGitInfo );
+int       mk_git_writeHeader( const char *pszHFilename, MkGitInfo pGitInfo );
 
 int mk_git_generateInfo( void );

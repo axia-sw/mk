@@ -37,17 +37,17 @@ void mk_fs_init( void );
 void mk_fs_fini( void );
 
 char *mk_fs_getCWD( char *cwd, size_t n );
-int mk_fs_enter( const char *path );
-void mk_fs_leave( void );
-int mk_fs_isFile( const char *path );
-int mk_fs_isDir( const char *path );
-void mk_fs_makeDirs( const char *dirs );
+int   mk_fs_enter( const char *path );
+void  mk_fs_leave( void );
+int   mk_fs_isFile( const char *path );
+int   mk_fs_isDir( const char *path );
+void  mk_fs_makeDirs( const char *dirs );
 char *mk_fs_realPath( const char *filename, char *resolvedname, size_t maxn );
 
-DIR *mk_fs_openDir( const char *path );
-DIR *mk_fs_closeDir( DIR *p );
+DIR *          mk_fs_openDir( const char *path );
+DIR *          mk_fs_closeDir( DIR *p );
 struct dirent *mk_fs_readDir( DIR *d );
-void mk_fs_remove( const char *path );
+void           mk_fs_remove( const char *path );
 
 typedef enum MkLanguage_e {
 	kMkLanguage_Unknown,

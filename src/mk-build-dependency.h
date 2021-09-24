@@ -36,11 +36,13 @@
 typedef struct MkDep_s *MkDep;
 
 MkDep mk_dep_new( const char *name );
-void mk_dep_delete( MkDep dep );
-void mk_dep_deleteAll( void );
+void  mk_dep_delete( MkDep dep );
+void  mk_dep_deleteAll( void );
+
 const char *mk_dep_getFile( MkDep dep );
-void mk_dep_push( MkDep dep, const char *name );
-size_t mk_dep_getSize( MkDep dep );
+void        mk_dep_push( MkDep dep, const char *name );
+size_t      mk_dep_getSize( MkDep dep );
 const char *mk_dep_at( MkDep dep, size_t i );
-MkDep mk_dep_find( const char *name );
+MkDep       mk_dep_find( const char *name );
+
 void mk_dep_debugPrintAll( void );

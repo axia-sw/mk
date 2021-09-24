@@ -27,20 +27,21 @@
 typedef struct MkStrList_s *MkStrList;
 
 MkStrList mk_sl_new( void );
+void      mk_sl_delete( MkStrList arr );
+void      mk_sl_deleteAll( void );
+
 size_t mk_sl_getCapacity( MkStrList arr );
 size_t mk_sl_getSize( MkStrList arr );
 char **mk_sl_getData( MkStrList arr );
-char *mk_sl_at( MkStrList arr, size_t i );
-void mk_sl_set( MkStrList arr, size_t i, const char *cstr );
-void mk_sl_clear( MkStrList arr );
-void mk_sl_delete( MkStrList arr );
-void mk_sl_deleteAll( void );
-void mk_sl_resize( MkStrList arr, size_t n );
-void mk_sl_pushBack( MkStrList arr, const char *cstr );
-void mk_sl_popBack( MkStrList arr );
-void mk_sl_print( MkStrList arr );
-void mk_sl_debugPrint( MkStrList arr );
-void mk_sl_sort( MkStrList arr );
+char * mk_sl_at( MkStrList arr, size_t i );
+void   mk_sl_set( MkStrList arr, size_t i, const char *cstr );
+void   mk_sl_clear( MkStrList arr );
+void   mk_sl_resize( MkStrList arr, size_t n );
+void   mk_sl_pushBack( MkStrList arr, const char *cstr );
+void   mk_sl_popBack( MkStrList arr );
+void   mk_sl_print( MkStrList arr );
+void   mk_sl_debugPrint( MkStrList arr );
+void   mk_sl_sort( MkStrList arr );
 
 void mk_sl_orderedSort( MkStrList arr, size_t *const buffer, size_t maxBuffer );
 void mk_sl_indexedSort( MkStrList arr, const size_t *const buffer, size_t bufferLen );

@@ -34,11 +34,11 @@ typedef enum {
 	kMkNumColorModes
 } MkColorMode_t;
 
-const char *mk_opt_getObjdirBase( void );
-const char *mk_opt_getDebugLogPath( void );
-const char *mk_opt_getDebugSuffix( void );
+const char *  mk_opt_getObjdirBase( void );
+const char *  mk_opt_getDebugLogPath( void );
+const char *  mk_opt_getDebugSuffix( void );
 MkColorMode_t mk_opt_getColorMode( void );
-const char *mk_opt_getConfigName( void );
+const char *  mk_opt_getConfigName( void );
 
 const char *mk_opt_getBuildGenPath( void );
 const char *mk_opt_getBuildGenIncDir( void );

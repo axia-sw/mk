@@ -28,13 +28,17 @@ int mk_prjfs_isIncDir( MkProject proj, const char *name );
 int mk_prjfs_isLibDir( MkProject proj, const char *name );
 int mk_prjfs_isTestDir( MkProject proj, const char *name );
 int mk_prjfs_isDirOwner( const char *path );
+
 void mk_prjfs_enumSourceFiles( MkProject proj, const char *srcdir );
 void mk_prjfs_enumTestSourceFiles( MkProject proj, const char *srcdir );
-int mk_prjfs_calcName( MkProject proj, const char *path, const char *file );
+
+int       mk_prjfs_calcName( MkProject proj, const char *path, const char *file );
 MkProject mk_prjfs_add( MkProject prnt, const char *path, const char *file, int type );
+
 void mk_prjfs_findPackages( const char *pkgdir );
 void mk_prjfs_findDynamicLibs( const char *dllsdir );
 void mk_prjfs_findTools( const char *tooldir );
 void mk_prjfs_findProjects( MkProject prnt, const char *srcdir );
 void mk_prjfs_findRootDirs( MkStrList srcdirs, MkStrList incdirs, MkStrList libdirs, MkStrList pkgdirs, MkStrList tooldirs, MkStrList dllsdirs );
+
 int mk_prjfs_makeObjDirs( MkProject proj );

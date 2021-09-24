@@ -124,8 +124,9 @@ extern struct MkProject_s *mk__g_lib_proj_head;
 extern struct MkProject_s *mk__g_lib_proj_tail;
 
 MkProject mk_prj_new( MkProject prnt );
-void mk_prj_delete( MkProject proj );
-void mk_prj_deleteAll( void );
+void      mk_prj_delete( MkProject proj );
+void      mk_prj_deleteAll( void );
+
 MkProject mk_prj_rootHead( void );
 MkProject mk_prj_rootTail( void );
 MkProject mk_prj_getParent( MkProject proj );
@@ -133,34 +134,41 @@ MkProject mk_prj_head( MkProject proj );
 MkProject mk_prj_tail( MkProject proj );
 MkProject mk_prj_prev( MkProject proj );
 MkProject mk_prj_next( MkProject proj );
-void mk_prj_setName( MkProject proj, const char *name );
-void mk_prj_setOutPath( MkProject proj, const char *path );
-void mk_prj_setPath( MkProject proj, const char *path );
-void mk_prj_setType( MkProject proj, int type );
+
+MkProject mk_prj_find_r( MkProject from, const char *name );
+MkProject mk_prj_find( const char *name );
+
+void        mk_prj_setName( MkProject proj, const char *name );
+void        mk_prj_setOutPath( MkProject proj, const char *path );
+void        mk_prj_setPath( MkProject proj, const char *path );
+void        mk_prj_setType( MkProject proj, int type );
 const char *mk_prj_getName( MkProject proj );
 const char *mk_prj_getPath( MkProject proj );
 const char *mk_prj_getOutPath( MkProject proj );
-int mk_prj_getType( MkProject proj );
-void mk_prj_addLib( MkProject proj, const char *libname );
-size_t mk_prj_numLibs( MkProject proj );
+int         mk_prj_getType( MkProject proj );
+
+void        mk_prj_addLib( MkProject proj, const char *libname );
+size_t      mk_prj_numLibs( MkProject proj );
 const char *mk_prj_libAt( MkProject proj, size_t i );
-void mk_prj_addLinkFlags( MkProject proj, const char *flags );
+void        mk_prj_addLinkFlags( MkProject proj, const char *flags );
 const char *mk_prj_getLinkFlags( MkProject proj );
-void mk_prj_appendExtraLibs( MkProject proj, const char *extras );
+
+void        mk_prj_appendExtraLibs( MkProject proj, const char *extras );
 const char *mk_prj_getExtraLibs( MkProject proj );
-void mk_prj_completeExtraLibs( MkProject proj, char *extras, size_t n );
-void mk_prj_addSourceFile( MkProject proj, const char *src );
-size_t mk_prj_numSourceFiles( MkProject proj );
+void        mk_prj_completeExtraLibs( MkProject proj, char *extras, size_t n );
+
+void        mk_prj_addSourceFile( MkProject proj, const char *src );
+size_t      mk_prj_numSourceFiles( MkProject proj );
 const char *mk_prj_sourceFileAt( MkProject proj, size_t i );
-void mk_prj_addTestSourceFile( MkProject proj, const char *src );
-size_t mk_prj_numTestSourceFiles( MkProject proj );
+void        mk_prj_addTestSourceFile( MkProject proj, const char *src );
+size_t      mk_prj_numTestSourceFiles( MkProject proj );
 const char *mk_prj_testSourceFileAt( MkProject proj, size_t i );
-void mk_prj_addSpecialDir( MkProject proj, const char *dir );
-size_t mk_prj_numSpecialDirs( MkProject proj );
+
+void        mk_prj_addSpecialDir( MkProject proj, const char *dir );
+size_t      mk_prj_numSpecialDirs( MkProject proj );
 const char *mk_prj_specialDirAt( MkProject proj, size_t i );
-int mk_prj_isTarget( MkProject proj );
+
+int  mk_prj_isTarget( MkProject proj );
 void mk_prj_printAll( MkProject proj, const char *margin );
 void mk_prj_calcDeps( MkProject proj );
 void mk_prj_calcLibFlags( MkProject proj );
-MkProject mk_prj_find_r( MkProject from, const char *name );
-MkProject mk_prj_find( const char *name );

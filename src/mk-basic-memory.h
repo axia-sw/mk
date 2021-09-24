@@ -64,21 +64,21 @@ enum {
 };
 
 #define mk_mem_maybeAllocEx( cBytes_, uFlags_ ) ( mk_mem__maybeAlloc( ( cBytes_ ), ( uFlags_ ), __FILE__, __LINE__, MK_CURFUNC ) )
-#define mk_mem_maybeAlloc( cBytes_ ) ( mk_mem__maybeAlloc( ( cBytes_ ), 0, __FILE__, __LINE__, MK_CURFUNC ) )
-#define mk_mem_allocEx( cBytes_, uFlags_ ) ( mk_mem__alloc( ( cBytes_ ), ( uFlags_ ), __FILE__, __LINE__, MK_CURFUNC ) )
-#define mk_mem_alloc( cBytes_ ) ( mk_mem__alloc( ( cBytes_ ), 0, __FILE__, __LINE__, MK_CURFUNC ) )
-#define mk_mem_dealloc( pBlock_ ) ( mk_mem__dealloc( (void *)( pBlock_ ), __FILE__, __LINE__, MK_CURFUNC ) )
-#define mk_mem_addRef( pBlock_ ) ( mk_mem__addRef( (void *)( pBlock_ ), __FILE__, __LINE__, MK_CURFUNC ) )
-#define mk_mem_attach( pBlock_, pSuperBlock_ ) ( mk_mem__attach( (void *)( pBlock_ ), (void *)( pSuperBlock_ ), __FILE__, __LINE__, MK_CURFUNC ) )
-#define mk_mem_detach( pBlock_ ) ( mk_mem__detach( (void *)( pBlock_ ), __FILE__, __LINE__, MK_CURFUNC ) )
-#define mk_mem_setFini( pBlock_, pfnFini_ ) ( mk_mem__setFini( (void *)( pBlock_ ), ( MkMem_Fini_fn_t )( pfnFini_ ) ) )
-#define mk_mem_size( pBlock_ ) ( mk_mem__size( (const void *)( pBlock_ ) ) )
+#define mk_mem_maybeAlloc( cBytes_ )            ( mk_mem__maybeAlloc( ( cBytes_ ), 0, __FILE__, __LINE__, MK_CURFUNC ) )
+#define mk_mem_allocEx( cBytes_, uFlags_ )      ( mk_mem__alloc( ( cBytes_ ), ( uFlags_ ), __FILE__, __LINE__, MK_CURFUNC ) )
+#define mk_mem_alloc( cBytes_ )                 ( mk_mem__alloc( ( cBytes_ ), 0, __FILE__, __LINE__, MK_CURFUNC ) )
+#define mk_mem_dealloc( pBlock_ )               ( mk_mem__dealloc( (void *)( pBlock_ ), __FILE__, __LINE__, MK_CURFUNC ) )
+#define mk_mem_addRef( pBlock_ )                ( mk_mem__addRef( (void *)( pBlock_ ), __FILE__, __LINE__, MK_CURFUNC ) )
+#define mk_mem_attach( pBlock_, pSuperBlock_ )  ( mk_mem__attach( (void *)( pBlock_ ), (void *)( pSuperBlock_ ), __FILE__, __LINE__, MK_CURFUNC ) )
+#define mk_mem_detach( pBlock_ )                ( mk_mem__detach( (void *)( pBlock_ ), __FILE__, __LINE__, MK_CURFUNC ) )
+#define mk_mem_setFini( pBlock_, pfnFini_ )     ( mk_mem__setFini( (void *)( pBlock_ ), ( MkMem_Fini_fn_t )( pfnFini_ ) ) )
+#define mk_mem_size( pBlock_ )                  ( mk_mem__size( (const void *)( pBlock_ ) ) )
 
-void *mk_mem__maybeAlloc( size_t cBytes, bitfield_t uFlags, const char *pszFile, unsigned int uLine, const char *pszFunction );
-void *mk_mem__alloc( size_t cBytes, bitfield_t uFlags, const char *pszFile, unsigned int uLine, const char *pszFunction );
-void *mk_mem__dealloc( void *pBlock, const char *pszFile, unsigned int uLine, const char *pszFunction );
-void *mk_mem__addRef( void *pBlock, const char *pszFile, unsigned int uLine, const char *pszFunction );
-void *mk_mem__attach( void *pBlock, void *pSuperBlock, const char *pszFile, unsigned int uLine, const char *pszFunction );
-void *mk_mem__detach( void *pBlock, const char *pszFile, unsigned int uLine, const char *pszFunction );
-void *mk_mem__setFini( void *pBlock, MkMem_Fini_fn_t pfnFini );
+void * mk_mem__maybeAlloc( size_t cBytes, bitfield_t uFlags, const char *pszFile, unsigned int uLine, const char *pszFunction );
+void * mk_mem__alloc( size_t cBytes, bitfield_t uFlags, const char *pszFile, unsigned int uLine, const char *pszFunction );
+void * mk_mem__dealloc( void *pBlock, const char *pszFile, unsigned int uLine, const char *pszFunction );
+void * mk_mem__addRef( void *pBlock, const char *pszFile, unsigned int uLine, const char *pszFunction );
+void * mk_mem__attach( void *pBlock, void *pSuperBlock, const char *pszFile, unsigned int uLine, const char *pszFunction );
+void * mk_mem__detach( void *pBlock, const char *pszFile, unsigned int uLine, const char *pszFunction );
+void * mk_mem__setFini( void *pBlock, MkMem_Fini_fn_t pfnFini );
 size_t mk_mem__size( const void *pBlock );

@@ -82,13 +82,14 @@ extern FILE *mk__g_siof[kMkNumSIO];
 #define MK_COLOR_YELLOW 0xE
 #define MK_COLOR_VIOLET 0xD
 
-int mk_sys_isColoredOutputEnabled( void );
+int  mk_sys_isColoredOutputEnabled( void );
 void mk_sys_initColoredOutput( void );
 
 unsigned char mk_sys_getCurrColor( MkSIO_t sio );
-void mk_sys_setCurrColor( MkSIO_t sio, unsigned char color );
+void          mk_sys_setCurrColor( MkSIO_t sio, unsigned char color );
+int           mk_sys_charToColorCode( char c );
+
 void mk_sys_uncoloredPuts( MkSIO_t sio, const char *text, size_t len );
-int mk_sys_charToColorCode( char c );
 void mk_sys_puts( MkSIO_t sio, const char *text );
 void mk_sys_printf( MkSIO_t sio, const char *format, ... );
 
