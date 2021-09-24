@@ -421,8 +421,8 @@ void mk_fs_remove( const char *path ) {
 
 MkLanguage mk_fs_getLanguage( const char *filename ) {
 #define EQ( X_, Y_ ) strcmp( ( X_ ), ( Y_ ) ) == 0
-	static const MkLanguage defaultCStandard      = kMkLanguage_C11;
-	static const MkLanguage defaultCxxStandard    = kMkLanguage_Cxx14;
+	static const MkLanguage defaultCStandard      = kMkLanguage_C_Default;
+	static const MkLanguage defaultCxxStandard    = kMkLanguage_Cxx_Default;
 	static const MkLanguage defaultObjCStandard   = kMkLanguage_ObjC;
 	static const MkLanguage defaultObjCxxStandard = kMkLanguage_ObjCxx;
 	const char *p;
@@ -469,6 +469,12 @@ MkLanguage mk_fs_getLanguage( const char *filename ) {
 	}
 	if( EQ( p, ".cc14" ) || EQ( p, ".cxx14" ) || EQ( p, ".cpp14" ) || EQ( p, ".c++14" ) ) {
 		return kMkLanguage_Cxx14;
+	}
+	if( EQ( p, ".cc17" ) || EQ( p, ".cxx17" ) || EQ( p, ".cpp17" ) || EQ( p, ".c++17" ) ) {
+		return kMkLanguage_Cxx17;
+	}
+	if( EQ( p, ".cc20" ) || EQ( p, ".cxx20" ) || EQ( p, ".cpp20" ) || EQ( p, ".c++20" ) ) {
+		return kMkLanguage_Cxx20;
 	}
 
 	return kMkLanguage_Unknown;

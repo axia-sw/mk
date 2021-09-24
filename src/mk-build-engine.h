@@ -22,6 +22,7 @@
 
 #include <stddef.h>
 
+#include "mk-basic-fileSystem.h"
 #include "mk-basic-stringList.h"
 #include "mk-build-library.h"
 #include "mk-build-project.h"
@@ -54,6 +55,7 @@ void        mk_bld_getCFlags_incDirs( char *flags, size_t nflags );
 void        mk_bld_getCFlags_defines( char *flags, size_t nflags, MkStrList defs );
 void        mk_bld_getCFlags_unitIO( char *flags, size_t nflags, const char *obj, const char *src );
 const char *mk_bld_getCFlags( MkProject proj, const char *obj, const char *src );
+const char *mk_bld_getStandardSwitchForLanguage( MkLanguage lang );
 
 void        mk_bld_getDeps_r( MkProject proj, MkStrList deparray );
 int         mk_bld_doesLibDependOnLib( MkLib mainlib, MkLib deplib );

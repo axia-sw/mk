@@ -55,11 +55,14 @@ typedef enum MkLanguage_e {
 	kMkLanguage_C89,
 	kMkLanguage_C99,
 	kMkLanguage_C11,
+	kMkLanguage_C17,
 
 	kMkLanguage_Cxx98,
 	kMkLanguage_Cxx03,
 	kMkLanguage_Cxx11,
 	kMkLanguage_Cxx14,
+	kMkLanguage_Cxx17,
+	kMkLanguage_Cxx20,
 
 	kMkLanguage_ObjC,
 	kMkLanguage_ObjCxx,
@@ -73,12 +76,15 @@ typedef enum MkLanguage_e {
 	kMkLanguage_C_End   = kMkLanguage_C11,
 
 	kMkLanguage_Cxx_Begin = kMkLanguage_Cxx98,
-	kMkLanguage_Cxx_End   = kMkLanguage_Cxx14,
+	kMkLanguage_Cxx_End   = kMkLanguage_Cxx20,
 
 	kMkLanguage_ObjC_Begin = kMkLanguage_ObjC,
 	kMkLanguage_ObjC_End   = kMkLanguage_ObjC,
 
 	kMkLanguage_ObjCxx_Begin = kMkLanguage_ObjCxx,
-	kMkLanguage_ObjCxx_End   = kMkLanguage_ObjCxx
+	kMkLanguage_ObjCxx_End   = kMkLanguage_ObjCxx,
+
+	kMkLanguage_C_Default   = kMkLanguage_C11,
+	kMkLanguage_Cxx_Default = kMkLanguage_Cxx17
 } MkLanguage;
 MkLanguage mk_fs_getLanguage( const char *filename );

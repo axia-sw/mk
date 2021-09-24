@@ -262,6 +262,29 @@ void mk_bld_getCFlags_warnings( char *flags, size_t nflags ) {
 	/* cl: /Wall */
 	mk_com_strcat( flags, nflags, defflags );
 }
+/* convert a given language enum to a GCC/Clang-styled command switch */
+const char *mk_bld_getStandardSwitchForLanguage( MkLanguage lang ) {
+	switch( lang ) {
+		case kMkLanguage_C89: return "-std=gnu89";
+		case kMkLanguage_C99: return "-std=gnu99";
+		case kMkLanguage_C11: return "-std=gnu11";
+		case kMkLanguage_C17: return "-std=gnu17";
+
+		case kMkLanguage_Cxx98: return "-std=gnu++98";
+		case kMkLanguage_Cxx03: return "-std=gnu++03";
+		case kMkLanguage_Cxx11: return "-std=gnu++11";
+		case kMkLanguage_Cxx14: return "-std=gnu++14";
+		case kMkLanguage_Cxx17: return "-std=gnu++17";
+		case kMkLanguage_Cxx20: return "-std=gnu++20";
+
+		case kMkLanguage_ObjC: break; // FIXME: Implement
+		case kMkLanguage_ObjCxx: break; // FIXME: Implement
+
+		default: break;
+	}
+
+	return "";
+}
 /* figure out the standard :: returns 1 if c++ file */
 int mk_bld_getCFlags_standard( char *flags, size_t nflags, const char *filename ) {
 	static int didinit = 0;
@@ -308,20 +331,20 @@ int mk_bld_getCFlags_standard( char *flags, size_t nflags, const char *filename 
 		}
 
 		p = getenv( "CFLAGS_STANDARD" );
-		if( p != (const char *)0 ) {
-			mk_com_strcpy( defcstandard, sizeof( defcstandard ), p );
-			mk_com_strcat( defcstandard, sizeof( defcstandard ), " " );
-		} else {
-			mk_com_strcpy( defcstandard, sizeof( defcstandard ), "-std=gnu17 " );
+		if( p == (const char *)0 ) {
+			p = mk_bld_getStandardSwitchForLanguage( kMkLanguage_C_Default );
 		}
 
+		mk_com_strcpy( defcstandard, sizeof( defcstandard ), p );
+		mk_com_strcat( defcstandard, sizeof( defcstandard ), " " );
+
 		p = getenv( "CXXFLAGS_STANDARD" );
-		if( p != (const char *)0 ) {
-			mk_com_strcpy( defcxxstandard, sizeof( defcxxstandard ), p );
-			mk_com_strcat( defcxxstandard, sizeof( defcxxstandard ), " " );
-		} else {
-			mk_com_strcpy( defcxxstandard, sizeof( defcxxstandard ), "-std=gnu++17 " );
+		if( p == (const char *)0 ) {
+			p = mk_bld_getStandardSwitchForLanguage( kMkLanguage_Cxx_Default );
 		}
+
+		mk_com_strcpy( defcxxstandard, sizeof( defcxxstandard ), p );
+		mk_com_strcat( defcxxstandard, sizeof( defcxxstandard ), " " );
 
 		didinit = 1;
 	}
