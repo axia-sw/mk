@@ -273,7 +273,7 @@ void mk_com_substExt( char *dst, size_t dstn, const char *src, const char *ext )
 	mk_com_strcpy( &dst[p - src], dstn - ( size_t )( p - src ), ext );
 }
 
-/* run a command in the mk_com_shellf */
+/* run a command in the shell */
 int mk_com_shellf( const char *format, ... ) {
 	static char cmd[16384];
 	va_list args;
