@@ -53,6 +53,11 @@ void mk_dbg_out( const char *str ) {
 #if MK_DEBUG_ENABLED
 	static const char szTabs[]  = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
 	static const unsigned cTabs = sizeof( szTabs ) - 1;
+	static int didWriteNewline = 1;
+
+	const char *pstr;
+	size_t len;
+
 	unsigned cIndents;
 
 	if( !mk__g_pDebugLog ) {
@@ -78,17 +83,38 @@ void mk_dbg_out( const char *str ) {
 		atexit( mk_dbg__closeLog_f );
 	}
 
-	cIndents = mk__g_cDebugIndents;
-	while( cIndents > 0 ) {
-		unsigned cIndentsToWrite;
+	pstr = str;
+	do {
+		/* write leading indentation (if any) */
+		cIndents = mk__g_cDebugIndents;
+		while( cIndents > 0 && didWriteNewline ) {
+			unsigned cIndentsToWrite;
 
-		cIndentsToWrite = cIndents < cTabs ? cIndents : cTabs;
-		fwrite( &szTabs[0], (size_t)cIndentsToWrite, 1, mk__g_pDebugLog );
+			cIndentsToWrite = cIndents < cTabs ? cIndents : cTabs;
+			fwrite( &szTabs[0], (size_t)cIndentsToWrite, 1, mk__g_pDebugLog );
 
-		cIndents -= cIndentsToWrite;
-	}
+			cIndents -= cIndentsToWrite;
+		}
 
-	fwrite( str, strlen( str ), 1, mk__g_pDebugLog );
+		/* find the end of the current line to write */
+		const char *nstr = strchr( pstr, '\n' );
+		if( nstr != (const char *)0 ) {
+			didWriteNewline = 1;
+			++nstr;
+		} else {
+			didWriteNewline = 0;
+			nstr = strchr( pstr, '\0' );
+		}
+
+		/* write the actual line */
+		len = (size_t)(ptrdiff_t)( nstr - pstr );
+		fwrite( pstr, len, 1, mk__g_pDebugLog );
+
+		/* set next search point */
+		pstr = nstr;
+	} while( *pstr != '\0' );
+
+	/* ensure all debug data is written in case we crash right after this */
 	fflush( mk__g_pDebugLog );
 #else
 	(void)str;
