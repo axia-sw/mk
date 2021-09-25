@@ -34,6 +34,7 @@ typedef enum {
 	kMkCPU_AArch64,
 	kMkCPU_PowerPC,
 	kMkCPU_MIPS,
+	kMkCPU_RiscV,
 	kMkCPU_WebAssembly,
 
 	kMkNumCPU
