@@ -15,6 +15,7 @@
 #include "mk-basic-common.h"
 
 #include "mk-basic-assert.h"
+#include "mk-basic-debug.h"
 #include "mk-basic-fileSystem.h"
 #include "mk-basic-logging.h"
 #include "mk-basic-memory.h"
@@ -103,8 +104,11 @@ const char *mk_com_va( const char *format, ... ) {
 
 /* secure strlen */
 size_t mk_com_strlen( const char *src ) {
-	MK_ASSERT( src != (const char *)0 );
-	return strlen( src );
+	if( src != (const char *)0 ) {
+		return strlen( src );
+	}
+
+	return 0;
 }
 
 /* secure strcat */
@@ -115,7 +119,12 @@ size_t mk_com_strcat( char *buf, size_t bufn, const char *src ) {
 	len   = mk_com_strlen( src );
 
 	if( index + len >= bufn ) {
-		mk_log_fatalError( "detected overflow" );
+		mk_dbg_enter( "mk_com_strcat!buffer-overflow" );
+		mk_dbg_outf( "buflen: %u; srclen: %u\n", (unsigned int)index, (unsigned int)len );
+		mk_dbg_outf( "buf@%p: %.*s\n", buf, (int)(ptrdiff_t)index, buf );
+		mk_dbg_outf( "src@%p: %.*s\n", src, (int)(ptrdiff_t)len, src );
+		mk_dbg_leave();
+		mk_log_fatalError( "strcat: detected overflow" );
 	}
 
 	memcpy( (void *)&buf[index], (const void *)src, len + 1 );
@@ -130,7 +139,12 @@ size_t mk_com_strncat( char *buf, size_t bufn, const char *src, size_t srcn ) {
 	len   = srcn ? srcn : mk_com_strlen( src );
 
 	if( index + len >= bufn ) {
-		mk_log_fatalError( "detected overflow" );
+		mk_dbg_enter( "mk_com_strncat!buffer-overflow" );
+		mk_dbg_outf( "buflen: %u; srclen: %u\n", (unsigned int)index, (unsigned int)len );
+		mk_dbg_outf( "buf@%p: %.*s\n", buf, (int)(ptrdiff_t)index, buf );
+		mk_dbg_outf( "src@%p: %.*s\n", src, (int)(ptrdiff_t)len, src );
+		mk_dbg_leave();
+		mk_log_fatalError( "strncat: detected overflow" );
 	}
 
 	memcpy( (void *)&buf[index], (const void *)src, len );
@@ -146,7 +160,7 @@ void mk_com_strcpy( char *dst, size_t dstn, const char *src ) {
 	for( i = 0; src[i]; i++ ) {
 		dst[i] = src[i];
 		if( i == dstn - 1 ) {
-			mk_log_fatalError( "detected overflow" );
+			mk_log_fatalError( "strcpy: detected overflow" );
 		}
 	}
 
@@ -156,7 +170,7 @@ void mk_com_strcpy( char *dst, size_t dstn, const char *src ) {
 /* secure strncpy */
 void mk_com_strncpy( char *buf, size_t bufn, const char *src, size_t srcn ) {
 	if( srcn >= bufn ) {
-		mk_log_fatalError( "detected overflow" );
+		mk_log_fatalError( "strncpy: detected overflow" );
 	}
 
 	strncpy( buf, src, srcn );
