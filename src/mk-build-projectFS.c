@@ -319,6 +319,10 @@ static void mk_prj__enumSourceFilesImpl( MkProject proj, const char *srcdir ) {
 	}
 
 	while( ( dp = readDirQuietly( d ) ) != (struct dirent *)0 ) {
+		if( dp->d_name[0] == '.' && ( dp->d_name[1] == '\0' || ( dp->d_name[1] == '.' && dp->d_name[2] == '\0' ) ) ) {
+			continue;
+		}
+
 		mk_com_strcpy( path, sizeof( path ), srcdir );
 		mk_com_strcat( path, sizeof( path ), dp->d_name );
 
@@ -402,6 +406,10 @@ static void mk_prj__enumTestSourceFilesImpl( MkProject proj, const char *srcdir 
 	}
 
 	while( ( dp = readDirQuietly( d ) ) != (struct dirent *)0 ) {
+		if( dp->d_name[0] == '.' && ( dp->d_name[1] == '\0' || ( dp->d_name[1] == '.' && dp->d_name[2] == '\0' ) ) ) {
+			continue;
+		}
+
 		mk_com_strcpy( path, sizeof( path ), srcdir );
 		mk_com_strcat( path, sizeof( path ), dp->d_name );
 
