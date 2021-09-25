@@ -89,8 +89,9 @@ MkProject mk_prj_new( MkProject prnt ) {
 
 /* delete an existing project */
 void mk_prj_delete( MkProject proj ) {
-	if( !proj )
+	if( !proj ) {
 		return;
+	}
 
 	while( proj->head ) {
 		mk_prj_delete( proj->head );
