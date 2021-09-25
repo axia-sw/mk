@@ -39,7 +39,7 @@
 #endif
 
 #ifndef MK_LOG_MEMORY_ALLOCS_ENABLED
-#	define MK_LOG_MEMORY_ALLOCS_ENABLED 0
+#	define MK_LOG_MEMORY_ALLOCS_ENABLED 1
 #endif
 
 typedef void ( *MkMem_Fini_fn_t )( void * );

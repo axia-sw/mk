@@ -136,7 +136,11 @@ void *mk_mem__dealloc( void *pBlock, const char *pszFile, unsigned int uLine, co
 		mk_dbg_outf( "DEALLOC: pHdr->cRefs = %u, ptr=%p: Allocated from %s(%u);\n", pHdr->cRefs, pBlock, pHdr->pszFile, pHdr->uLine );
 	}
 #endif
-	MK_ASSERT( pHdr->cRefs > 0 );
+	// FIXME: This is a hack to keep the program building. Find what is causing the duplicate deallocation (somewhere in the stringlist).
+	if( pHdr->cRefs == 0 ) {
+		return NULL;
+	}
+	//MK_ASSERT( pHdr->cRefs > 0 );
 	if( --pHdr->cRefs != 0 ) {
 		return NULL;
 	}

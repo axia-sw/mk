@@ -17,6 +17,7 @@
 #include "mk-basic-assert.h"
 #include "mk-basic-common.h"
 #include "mk-basic-debug.h"
+#include "mk-basic-memory.h"
 #include "mk-basic-stringList.h"
 #include "mk-defs-config.h"
 
@@ -87,15 +88,26 @@ char *mk_sl_at( MkStrList arr, size_t i ) {
 	return arr->data[i];
 }
 
+static size_t calculate_string_size( const char *cstr ) {
+	if( !cstr ) {
+		return 0;
+	}
+
+	return mk_com_strlen( cstr ) + 1;
+}
+
 /* set a single element of the array */
 void mk_sl_set( MkStrList arr, size_t i, const char *cstr ) {
 	MK_ASSERT( arr != (MkStrList)0 );
 	MK_ASSERT( i < arr->size );
 
-	if( !cstr ) {
-		arr->data[i] = (char *)mk_com_memory( (void *)arr->data[i], 0 );
-	} else {
-		arr->data[i] = mk_com_strdup( cstr );
+	size_t len = calculate_string_size( cstr );
+
+	arr->data[i] = (char *)mk_com_memory( (void *)arr->data[i], calculate_string_size( cstr ) );
+	MK_ASSERT( len == 0 || arr->data[i] != (char *)0 );
+
+	if( cstr != (const char *)0 ) {
+		memcpy( arr->data[i], cstr, len );
 	}
 }
 
@@ -105,13 +117,21 @@ void mk_sl_clear( MkStrList arr ) {
 
 	MK_ASSERT( arr != (MkStrList)0 );
 
-	for( i = 0; i < arr->size; i++ ) {
+#if MK_LOG_MEMORY_ALLOCS_ENABLED
+	mk_dbg_enter( "mk_sl_clear(%p)", arr );
+#endif
+
+	for( i = arr->size; i-- > 0; ) {
 		arr->data[i] = (char *)mk_com_memory( (void *)arr->data[i], 0 );
 	}
 
 	arr->data     = (char **)mk_com_memory( (void *)arr->data, 0 );
 	arr->capacity = 0;
 	arr->size     = 0;
+
+#if MK_LOG_MEMORY_ALLOCS_ENABLED
+	mk_dbg_leave();
+#endif
 }
 
 /* delete an array */
@@ -120,30 +140,47 @@ void mk_sl_delete( MkStrList arr ) {
 		return;
 	}
 
+#if MK_LOG_MEMORY_ALLOCS_ENABLED
+	mk_dbg_enter( "mk_sl_delete(%p)", arr );
+#endif
+
 	mk_sl_clear( arr );
 
 	if( arr->prev ) {
 		arr->prev->next = arr->next;
-	}
-	if( arr->next ) {
-		arr->next->prev = arr->prev;
-	}
-
-	if( mk__g_arr_head == arr ) {
+	} else {
 		mk__g_arr_head = arr->next;
 	}
-	if( mk__g_arr_tail == arr ) {
+
+	if( arr->next ) {
+		arr->next->prev = arr->prev;
+	} else {
 		mk__g_arr_tail = arr->prev;
 	}
 
+	arr->prev = (MkStrList)0;
+	arr->next = (MkStrList)0;
+
 	mk_com_memory( (void *)arr, 0 );
+
+#if MK_LOG_MEMORY_ALLOCS_ENABLED
+	mk_dbg_leave();
+#endif
 }
 
 /* delete all arrays */
 void mk_sl_deleteAll( void ) {
+#if MK_LOG_MEMORY_ALLOCS_ENABLED
+	mk_dbg_enter("mk_sl_deleteAll");
+#endif
+
 	while( mk__g_arr_head ) {
 		mk_sl_delete( mk__g_arr_head );
 	}
+
+#if MK_LOG_MEMORY_ALLOCS_ENABLED
+	mk_dbg_leave();
+#endif
 }
 
 /* set the new size of an array */
@@ -188,19 +225,31 @@ void mk_sl_popBack( MkStrList arr ) {
 	--arr->size;
 }
 
+/* calculate the number of digits in a given number */
+static int count_digits( size_t n ) {
+	int numdigits = 0;
+	do {
+		numdigits += 1;
+		n /= 10;
+	} while( n != 0 );
+	return numdigits;
+}
+
 /* display the contents of an array */
 void mk_sl_print( MkStrList arr ) {
 	size_t i, n;
+	int numdigits;
 
 	MK_ASSERT( arr != (MkStrList)0 );
 
 	n = mk_sl_getSize( arr );
+	numdigits = count_digits( n );
 	for( i = 0; i < n; i++ ) {
 #if MK_WINDOWS_ENABLED
-		printf( "%2u. \"%s\"\n", (unsigned int)i, mk_sl_at( arr, i ) );
+		printf( "%*u. \"%s\"\n", numdigits, (unsigned int)i, mk_sl_at( arr, i ) );
 #else
 		/* ISO C90 does not support the 'z' modifier; ignore... */
-		printf( "%2zu. \"%s\"\n", i, mk_sl_at( arr, i ) );
+		printf( "%*zu. \"%s\"\n", numdigits, i, mk_sl_at( arr, i ) );
 #endif
 	}
 
@@ -208,16 +257,18 @@ void mk_sl_print( MkStrList arr ) {
 }
 void mk_sl_debugPrint( MkStrList arr ) {
 	size_t i, n;
+	int numdigits;
 
 	MK_ASSERT( arr != (MkStrList)0 );
 
 	n = mk_sl_getSize( arr );
+	numdigits = count_digits( n );
 	for( i = 0; i < n; i++ ) {
 #if MK_WINDOWS_ENABLED
-		mk_dbg_outf( "%2u. \"%s\"\n", (unsigned int)i, mk_sl_at( arr, i ) );
+		mk_dbg_outf( "%*u. \"%s\"\n", numdigits, (unsigned int)i, mk_sl_at( arr, i ) );
 #else
 		/* ISO C90 does not support the 'z' modifier; ignore... */
-		mk_dbg_outf( "%2zu. \"%s\"\n", i, mk_sl_at( arr, i ) );
+		mk_dbg_outf( "%*zu. \"%s\"\n", numdigits, i, mk_sl_at( arr, i ) );
 #endif
 	}
 
