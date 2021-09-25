@@ -81,7 +81,7 @@ void *mk_mem__maybeAlloc( size_t cBytes, bitfield_t uFlags, const char *pszFile,
 	}
 
 #if MK_LOG_MEMORY_ALLOCS_ENABLED
-	mk_dbg_outf( "ALLOC: %s(%i) in %s: %p, %u;", pszFile, uLine, pszFunction, p,
+	mk_dbg_outf( "ALLOC: %s(%i) in %s: %p, %u;\n", pszFile, uLine, pszFunction, p,
 	    (unsigned int)cBytes );
 #endif
 
@@ -126,11 +126,16 @@ void *mk_mem__dealloc( void *pBlock, const char *pszFile, unsigned int uLine, co
 	pHdr = (struct MkMem__Hdr_s *)pBlock - 1;
 
 #if MK_LOG_MEMORY_ALLOCS_ENABLED
-	mk_dbg_outf( "DEALLOC: %s(%i) in %s: %s%p, %u (refcnt=%u);", pszFile, uLine,
+	mk_dbg_outf( "DEALLOC: %s(%i) in %s: %s%p, %u (refcnt=%u);\n", pszFile, uLine,
 	    pszFunction, pHdr->pPrnt != NULL ? "[sub]" : "", pBlock,
 	    (unsigned int)pHdr->cBytes, (unsigned int)pHdr->cRefs );
 #endif
 
+#if MK_MEM_LOCTRACE_ENABLED
+	if( pHdr->cRefs == 0 ) {
+		mk_dbg_outf( "DEALLOC: pHdr->cRefs = %u, ptr=%p: Allocated from %s(%u);\n", pHdr->cRefs, pBlock, pHdr->pszFile, pHdr->uLine );
+	}
+#endif
 	MK_ASSERT( pHdr->cRefs > 0 );
 	if( --pHdr->cRefs != 0 ) {
 		return NULL;
@@ -167,8 +172,8 @@ void *mk_mem__addRef( void *pBlock, const char *pszFile, unsigned int uLine, con
 	++pHdr->cRefs;
 
 #if MK_LOG_MEMORY_ALLOCS_ENABLED
-	mk_dbg_outf( "MEM-ADDREF: %s(%i) in %s: %p, %u (refcnt=%u);", pszFile, uLine,
-	    pszFunction, pBlock, (unsigned int)cBytes, (unsigned int)pHdr->cRefs );
+	mk_dbg_outf( "MEM-ADDREF: %s(%i) in %s: %p, %u (refcnt=%u);\n", pszFile, uLine,
+	    pszFunction, pBlock, (unsigned int)pHdr->cBytes, (unsigned int)pHdr->cRefs );
 #else
 	(void)pszFile;
 	(void)uLine;
@@ -202,10 +207,10 @@ void *mk_mem__attach( void *pBlock, void *pSuperBlock, const char *pszFile, unsi
 	pSuperHdr = (struct MkMem__Hdr_s *)pSuperBlock - 1;
 
 #if MK_LOG_MEMORY_ALLOCS_ENABLED
-	mk_dbg_outf( "MEM-ATTACH: %s(%i) in %s: %p(%u)->%p(%u);",
+	mk_dbg_outf( "MEM-ATTACH: %s(%i) in %s: %p(%u)->%p(%u);\n",
 	    pszFile, uLine, pszFunction,
-	    pBlock, (unsigned int)pBlock->cBytes,
-	    pSuperBlock, (unsigned int)pSuperBlock->cBytes );
+	    pBlock, (unsigned int)pHdr->cBytes,
+	    pSuperBlock, (unsigned int)pSuperHdr->cBytes );
 #else
 	(void)pszFile;
 	(void)uLine;
@@ -248,9 +253,9 @@ void *mk_mem__detach( void *pBlock, const char *pszFile, unsigned int uLine, con
 	pHdr = (struct MkMem__Hdr_s *)pBlock - 1;
 
 #if MK_LOG_MEMORY_ALLOCS_ENABLED
-	mk_dbg_outf( "MEM-DETACH: %s(%i) in %s: %p(%u);",
+	mk_dbg_outf( "MEM-DETACH: %s(%i) in %s: %p(%u);\n",
 	    pszFile, uLine, pszFunction,
-	    pBlock, (unsigned int)pBlock->cBytes );
+	    pBlock, (unsigned int)pHdr->cBytes );
 #else
 	(void)pszFile;
 	(void)uLine;
