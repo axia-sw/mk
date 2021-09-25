@@ -329,7 +329,7 @@ int mk_git_writeHeader( const char *pszHFilename, MkGitInfo pGitInfo ) {
 		MK_ASSERT( pszTimestamp != (const char *)0 && *pszTimestamp != '\0' );
 
 		if( !( pszBranchName = strrchr( pszBranchFile, '/' ) ) ) {
-			mk_dbg_outf( "mk_git_writeHeader: Invalid branch filename \"%s\"", pszBranchFile );
+			mk_dbg_outf( "mk_git_writeHeader: Invalid branch filename \"%s\"\n", pszBranchFile );
 			return 0;
 		}
 
