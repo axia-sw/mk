@@ -9,6 +9,7 @@
 # Build results
 
 .target/
+.mk-obj/
 [Dd]ebug/
 [Rr]elease/
 [Bb]uild/
