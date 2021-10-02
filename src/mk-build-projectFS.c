@@ -589,10 +589,6 @@ void mk_prjfs_findPackages( const char *pkgdir ) {
 
 	/* run through each entry in the directory */
 	while( ( dp = mk_fs_readDir( d ) ) != (struct dirent *)0 ) {
-		if( !strcmp( dp->d_name, "." ) || !strcmp( dp->d_name, ".." ) ) {
-			continue;
-		}
-
 		/* validate the directory */
 		if( !mk_fs_realPath( mk_com_va( "%s/%s/", pkgdir, dp->d_name ), path,
 		        sizeof( path ) ) ) {
@@ -631,10 +627,6 @@ void mk_prjfs_findDynamicLibs( const char *dllsdir ) {
 
 	/* run through each entry in the directory */
 	while( ( dp = mk_fs_readDir( d ) ) != (struct dirent *)0 ) {
-		if( !strcmp( dp->d_name, "." ) || !strcmp( dp->d_name, ".." ) ) {
-			continue;
-		}
-
 		/* validate the directory */
 		if( !mk_fs_realPath( mk_com_va( "%s/%s/", dllsdir, dp->d_name ), path,
 		        sizeof( path ) ) ) {
@@ -673,10 +665,6 @@ void mk_prjfs_findTools( const char *tooldir ) {
 
 	/* run through each entry in the directory */
 	while( ( dp = mk_fs_readDir( d ) ) != (struct dirent *)0 ) {
-		if( !strcmp( dp->d_name, "." ) || !strcmp( dp->d_name, ".." ) ) {
-			continue;
-		}
-
 		/* validate the directory */
 		if( !mk_fs_realPath( mk_com_va( "%s/%s/", tooldir, dp->d_name ), path,
 		        sizeof( path ) ) ) {
@@ -727,10 +715,6 @@ void mk_prjfs_findProjects( MkProject prnt, const char *srcdir ) {
 
 	/* run through each entry in the directory */
 	while( ( dp = mk_fs_readDir( d ) ) != (struct dirent *)0 ) {
-		if( !strcmp( dp->d_name, "." ) || !strcmp( dp->d_name, ".." ) ) {
-			continue;
-		}
-
 		/* make sure this is a directory; get the real (absolute) path */
 		if( !mk_fs_realPath( mk_com_va( "%s/%s/", srcdir, dp->d_name ), path,
 		        sizeof( path ) ) ) {

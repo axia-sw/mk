@@ -201,10 +201,6 @@ void mk_al_managePackage_r( const char *libname, int sys, const char *incdir ) {
 		return;
 	}
 	while( ( dp = readdir( d ) ) != (struct dirent *)0 ) {
-		if( !strcmp( dp->d_name, "." ) || !strcmp( dp->d_name, ".." ) ) {
-			continue;
-		}
-
 		if( mk_fs_isDir( dp->d_name ) ) {
 			mk_al_managePackage_r( libname, sys, dp->d_name );
 			continue;

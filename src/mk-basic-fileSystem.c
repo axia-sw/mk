@@ -363,8 +363,17 @@ struct dirent *mk_fs_readDir( DIR *d ) {
 		mk_log_error( NULL, 0, "mk_fs_readDir", NULL );
 	}
 
-	/* TEMP-FIX: buggy version of readdir() sets errno? */
-	dp = readdir( d );
+	for(;;) {
+		dp = readdir( d );
+		if( dp != (struct dirent *)0 ) {
+			if( !strcmp( dp->d_name, "." ) || !strcmp( dp->d_name, ".." ) ) {
+				continue;
+			}
+		}
+
+		break;
+	}
+
 	if( dp != (struct dirent *)0 || errno == ENOTDIR ) {
 		errno = 0;
 	}
@@ -394,13 +403,6 @@ void mk_fs_remove( const char *path ) {
 
 		d = mk_fs_openDir( path );
 		while( ( dp = mk_fs_readDir( d ) ) != NULL ) {
-			if( strcmp( dp->d_name, "." ) == 0 ) {
-				continue;
-			}
-			if( strcmp( dp->d_name, ".." ) == 0 ) {
-				continue;
-			}
-
 			mk_com_strcpy( filepath_namepart,
 			    PATH_MAX - (size_t)filepath_namepart, dp->d_name );
 			mk_fs_remove( filepath );
