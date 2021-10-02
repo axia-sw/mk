@@ -40,6 +40,8 @@ size_t      mk_com_strncat( char *buf, size_t bufn, const char *src, size_t srcn
 void        mk_com_strcpy( char *dst, size_t dstn, const char *src );
 void        mk_com_strncpy( char *buf, size_t bufn, const char *src, size_t srcn );
 char *      mk_com__strdup( const char *cstr, const char *file, unsigned int line, const char *func );
+const char *mk_com_strchrz( const char *cstr, char ch );
+const void *mk_com_memchrz( const void *p, size_t n, char ch );
 
 char *      mk_com_dup( char *dst, const char *src );
 char *      mk_com_dupn( char *dst, const char *src, size_t numchars );

@@ -191,6 +191,32 @@ char *mk_com__strdup( const char *cstr, const char *file, unsigned int line, con
 
 	return p;
 }
+const char *mk_com_strchrz( const char *cstr, char ch ) {
+	const char *p;
+
+	if( !cstr ) {
+		return (const char *)0;
+	}
+
+	if( !( p = strchr( cstr, ch ) ) ) {
+		p = strchr( cstr, '\0' );
+	}
+
+	return p;
+}
+const void *mk_com_memchrz( const void *p, size_t n, char ch ) {
+	const char *q;
+
+	if( !p || !n ) {
+		return p;
+	}
+
+	if( !( q = (const char *)memchr( p, ch, n ) ) ) {
+		q = ( (const char *)p ) + n;
+	}
+
+	return (const void *)q;
+}
 
 /* strdup() in-place alternative */
 char *mk_com_dup( char *dst, const char *src ) {

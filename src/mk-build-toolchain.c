@@ -28,9 +28,9 @@ struct MkTool_s {
 	/* list of file extensions this tool recognizes */
 	MkStrList fileExts;
 
-	/* command to run per file */
+	/* command to run per file (e.g., "cc -c $< -o $@") */
 	char *perFileCommand;
-	/* command to run per project */
+	/* command to run per project (e.g., "link -o $@ $+") */
 	char *perProjCommand;
 };
 

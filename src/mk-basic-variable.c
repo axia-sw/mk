@@ -17,6 +17,7 @@
 #include "mk-basic-assert.h"
 #include "mk-basic-common.h"
 #include "mk-basic-memory.h"
+#include "mk-basic-stringBuilder.h"
 #include "mk-basic-stringList.h"
 
 /*
@@ -33,6 +34,15 @@
 	Variables can be strings or arrays.
 
 */
+
+struct MkCommand_s {
+	struct MkCommand_s *c_prev, *c_next;
+
+	char *name;
+	unsigned int nameHash;
+
+	MkCmd_Eval_fn_t eval_fn;
+};
 
 struct MkVariable_s {
 	struct MkVariableSet_s *vs_prnt;
@@ -52,116 +62,8 @@ struct MkVariableSet_s {
 	struct MkVariable_s *v_head, *v_tail;
 };
 
+static struct MkCommand_s *g_c_head = NULL, *g_c_tail = NULL;
 static struct MkVariableSet_s *g_vs_head = NULL, *g_vs_tail = NULL;
-
-typedef struct {
-	char *buffer;
-	size_t len, capacity;
-} stringBuilder_t;
-
-static stringBuilder_t *sb_init( stringBuilder_t *sb, size_t initCapacity ) {
-	MK_ASSERT( sb != (stringBuilder_t *)0 );
-
-	if( !initCapacity ) {
-		initCapacity = 128;
-	}
-
-	sb->buffer = (char *)mk_com_memory( (char*)0, initCapacity );
-
-	sb->len      = 0;
-	sb->capacity = initCapacity;
-
-	return sb;
-}
-static char *sb_done( stringBuilder_t *sb ) {
-	MK_ASSERT( sb != (stringBuilder_t *)0 );
-	MK_ASSERT( sb->buffer != (char *)0 );
-	MK_ASSERT( sb->len < sb->capacity );
-
-	sb->buffer[ sb->len ] = '\0';
-	return sb->buffer;
-}
-static stringBuilder_t *sb_pushSubstr( stringBuilder_t *sb, const char *s, const char *e ) {
-	size_t len;
-
-	MK_ASSERT( sb != (stringBuilder_t *)0 );
-	MK_ASSERT( s != (const char *)0 );
-
-	if( e == (const char *)0 ) {
-		e = strchr( s, '\0' );
-	}
-
-	len = (size_t)(ptrdiff_t)( e - s );
-
-	if( sb->len + len + 1 > sb->capacity ) {
-		static const size_t alignment = 1024;
-		size_t capacity;
-
-		capacity  = sb->len + len + 1;
-		capacity += ( alignment - ( capacity % alignment ) )%alignment;
-
-		sb->buffer   = (char *)mk_com_memory( (void*)sb->buffer, capacity );
-		sb->capacity = capacity;
-	}
-
-	memcpy( (void *)&sb->buffer[sb->len], (const void *)s, len );
-	sb->len += len;
-
-	return sb;
-}
-static stringBuilder_t *sb_pushStr( stringBuilder_t *sb, const char *s ) {
-	return sb_pushSubstr( sb, s, (const char *)0 );
-}
-static stringBuilder_t *sb_pushChar( stringBuilder_t *sb, char c ) {
-	const char *s, *e;
-
-	if( c == '\0' ) {
-		return sb;
-	}
-
-	s = &c;
-	e = s + 1;
-
-	return sb_pushSubstr( sb, s, e );
-}
-static stringBuilder_t *sb_pushVar( stringBuilder_t *sb, MkVariable v ) {
-	size_t i, n;
-	char prefix, quote;
-
-	if( !v ) {
-		return sb;
-	}
-
-	if( !v->values ) {
-		return sb;
-	}
-
-	n = mk_sl_getSize( v->values );
-	prefix = '\0';
-	for( i = 0; i < n; ++i ) {
-		const char *str;
-
-		str = mk_sl_at( v->values, i );
-		if( !str || *str == '\0' ) {
-			continue;
-		}
-
-		sb_pushChar( sb, prefix );
-		prefix = ' ';
-
-		// FIXME: Also implement quote escaping
-		quote = '\0';
-		if( strchr( str, ' ' ) != (const char *)0 ) {
-			quote = '\"';
-		}
-
-		sb_pushChar( sb, quote );
-		sb_pushStr( sb, str );
-		sb_pushChar( sb, quote );
-	}
-
-	return sb;
-}
 
 static unsigned int murmur3_scramble( unsigned int k ) {
 	k *= 0xCC9E2D51;
@@ -216,6 +118,108 @@ static unsigned int murmur3( const char *s, const char *e ) {
 	h ^= h >> 16;
 
 	return h;
+}
+
+static void link_command( MkCommand cmd ) {
+	cmd->c_next = (MkCommand)0;
+
+	if( ( cmd->c_prev = g_c_tail ) != (MkCommand)0 ) {
+		g_c_tail->c_next = cmd;
+	} else {
+		g_c_head = cmd;
+	}
+	g_c_tail = cmd;
+}
+static void unlink_command( MkCommand cmd ) {
+	if( cmd->c_prev != (MkCommand)0 ) {
+		cmd->c_prev->c_next = cmd->c_next;
+	} else {
+		g_c_head = cmd->c_next;
+	}
+
+	if( cmd->c_next != (MkCommand)0 ) {
+		cmd->c_next->c_prev = cmd->c_prev;
+	} else {
+		g_c_tail = cmd->c_prev;
+	}
+
+	cmd->c_prev = (MkCommand)0;
+	cmd->c_next = (MkCommand)0;
+}
+
+MkCommand mk_cmd_new( const char *name, MkCmd_Eval_fn_t eval ) {
+	unsigned int nameHash;
+	MkCommand cmd;
+
+	MK_ASSERT_MSG( name != (const char *)0, "Commands must have a valid name at creation" );
+	MK_ASSERT_MSG( eval != (MkCmd_Eval_fn_t)0, "Commands must have a valid evaluation function at creation" );
+
+	nameHash = murmur3( name, (const char *)0 );
+
+	if( ( cmd = mk_cmd_findByStr( name ) ) != (MkCommand)0 ) {
+		MK_ASSERT_MSG( cmd != (MkCommand)0, "Command has already been registered" );
+		return (MkCommand)0;
+	}
+
+	cmd = (MkCommand)mk_com_memory( (void*)0, sizeof(*cmd) );
+
+	cmd->name     = mk_com_strdup( name );
+	cmd->nameHash = nameHash;
+
+	cmd->eval_fn = eval;
+
+	link_command( cmd );
+
+	return cmd;
+}
+void mk_cmd_delete( MkCommand cmd ) {
+	if( !cmd ) {
+		return;
+	}
+
+	unlink_command( cmd );
+
+	cmd->name = (char *)mk_com_memory( (void*)cmd->name, 0 );
+
+	mk_com_memory( (void*)cmd, 0 );
+}
+
+MkCommand mk_cmd_findBySubstr( const char *s, const char *e ) {
+	MkCommand cmd;
+	unsigned int findHash;
+	
+	MK_ASSERT( s != (const char *)0 );
+
+	if( !e ) {
+		e = strchr( s, '\0' );
+	}
+
+	findHash = murmur3( s, e );
+
+	for( cmd = g_c_head; cmd != (MkCommand)0; cmd = cmd->c_next ) {
+		if( cmd->nameHash == findHash ) {
+			return cmd;
+		}
+	}
+
+	return (MkCommand)0;
+}
+MkCommand mk_cmd_findByStr( const char *s ) {
+	return mk_cmd_findBySubstr( s, (const char *)0 );
+}
+
+int mk_cmd_eval( MkCommand cmd, MkVariableSet context, MkStrList args, MkStrList results ) {
+	MK_ASSERT( context != (MkVariableSet)0 );
+	MK_ASSERT( args != (MkStrList)0 );
+	MK_ASSERT( results != (MkStrList)0 );
+
+	if( !cmd ) {
+		return -1;
+	}
+
+	MK_ASSERT( cmd->eval_fn != (MkCmd_Eval_fn_t)0 );
+
+	return cmd->eval_fn( cmd, context, args, results );
 }
 
 MkVariableSet mk_vs_new() {
@@ -426,32 +430,26 @@ void mk_v_setValueByStr( MkVariable v, const char *s ) {
 	mk_sl_set( v->values, 0, s );
 }
 void mk_v_setValueByVariable( MkVariable v, MkVariable other ) {
-	stringBuilder_t sb;
+	MkStringBuilder sb;
 
 	MK_ASSERT( v != (MkVariable)0 );
 
-	sb_init( &sb, 0 );
-	sb_pushVar( &sb, other );
-	mk_v_setValueByStr( v, sb_done( &sb ) );
+	mk_sb_init( &sb, 0 );
+	mk_sb_pushVar( &sb, other );
+	mk_v_setValueByStr( v, mk_sb_done( &sb ) );
 	mk_com_memory( (void*)sb.buffer, 0 );
 }
 
 static const char *strchrz( const char *s, const char *e, char ch ) {
-	size_t n;
-	const char *p;
-
-	n = (size_t)(ptrdiff_t)( e - s );
-
-	if( ( p = memchr( s, ch, n ) ) == (const char *)0 ) {
-		p = e;
-	}
-
-	return p;
+	return mk_com_memchrz( s, (size_t)(ptrdiff_t)( e - s ), ch );
 }
+
 char *mk_vs_evalSubstr_r( MkVariableSet vs, const char *s, const char *e ) {
-	stringBuilder_t sb;
+	MkStringBuilder sb, cmdsb;
 	const char *p, *q;
 	MkVariable v;
+	MkCommand cmd;
+	MkStrList args, results;
 
 	MK_ASSERT( vs != (MkVariableSet)0 );
 	MK_ASSERT( s != (const char *)0 );
@@ -460,12 +458,16 @@ char *mk_vs_evalSubstr_r( MkVariableSet vs, const char *s, const char *e ) {
 		e = strchr( s, '\0' );
 	}
 
-	sb_init( &sb, 0 );
+	mk_sb_init( &sb, 0 );
+	mk_sb_init( &cmdsb, 0 );
+
+	args    = mk_sl_new();
+	results = mk_sl_new();
 
 	p = s;
 	for(;;) {
 		q = strchrz( p, e, '$' );
-		sb_pushSubstr( &sb, p, q );
+		mk_sb_pushSubstr( &sb, p, q );
 
 		p = q;
 		if( p == e ) {
@@ -476,16 +478,19 @@ char *mk_vs_evalSubstr_r( MkVariableSet vs, const char *s, const char *e ) {
 		++p;
 
 		if( *p == '$' ) {
-			sb_pushChar( &sb, '$' );
+			mk_sb_pushChar( &sb, '$' );
 			++p;
 			continue;
 		}
 
 		if( *p == '(' ) {
+			const char *expr_s, *expr_e;
+			const char *name_s, *name_e;
+			const char *args_s, *args_e;
 			const char *next;
 			char *evalstr;
 			int level = 1;
-			int hasEval = 0;
+			int hasEval = 0, searchCmd = 0;
 
 			do {
 				++p;
@@ -530,26 +535,140 @@ char *mk_vs_evalSubstr_r( MkVariableSet vs, const char *s, const char *e ) {
 				--q;
 			}
 
+			expr_s = p;
+			expr_e = q;
+
 			if( hasEval ) {
-				evalstr = mk_vs_evalSubstr_r( vs, p, q );
-				v       = mk_vs_findVar( vs, evalstr );
-				evalstr = (char *)mk_com_memory( (void*)evalstr, 0 );
+				evalstr = mk_vs_evalSubstr_r( vs, expr_s, expr_e );
+
+				expr_s = evalstr;
+				expr_e = strchr( evalstr, '\0' );
+			}
+
+			name_s = expr_s;
+			if( *name_s == '/' ) {
+				name_s    += 1;
+				searchCmd  = 1;
+			}
+
+			args_s = expr_e;
+			args_e = args_s;
+
+			name_e = name_s;
+			while( name_e != expr_e ) {
+				if( *name_e == ' ' || *name_e == ',' ) {
+					args_s    = name_e + 1;
+					searchCmd = 1;
+					break;
+				}
+
+				if( *name_e == '\"' ) {
+					args_s    = name_e;
+					searchCmd = 1;
+					break;
+				}
+
+				++name_e;
+			}
+
+			mk_sl_clear( args );
+
+			p = args_s;
+			for(;;) {
+				/* skip spaces */
+				while( p != args_e && *(const unsigned char *)p <= ' ' ) {
+					++p;
+				}
+
+				q = p;
+				if( q == args_e ) {
+					break;
+				}
+
+				mk_sb_clear( &cmdsb );
+
+				/* quoted add */
+				if( *q == '\"' ) {
+					++q;
+					while( q != args_e && *q != '\"' ) {
+						if( q + 1 != args_e && *q == '\\' ) {
+							++q;
+						}
+						++q;
+					}
+					if( q != args_e && *q == '\"' ) {
+						++q;
+					}
+					mk_sb_quoteAndPushSubstr( &cmdsb, p, q );
+				/* plain add */
+				} else {
+					const char *qq;
+
+					while( q != args_e && *q != ',' ) {
+						++q;
+					}
+
+					qq = q;
+					
+					if( q != args_e ) {
+						while( q != p && *(const unsigned char *)( q - 1 ) <= ' ' ) {
+							--q;
+						}
+					}
+
+					mk_sb_pushSubstr( &cmdsb, p, q );
+
+					q = qq;
+					if( q != args_e && *q == ',' ) {
+						++q;
+					}
+				}
+
+				p = q;
+
+				mk_sl_pushBack( args, mk_sb_done( &cmdsb ) );
+			}
+
+			cmd = mk_cmd_findBySubstr( name_s, name_e );
+			if( !searchCmd && !cmd ) {
+				v = mk_vs_findVarBySubstr( vs, name_s, name_e );
 			} else {
-				v = mk_vs_findVarBySubstr( vs, p, q );
+				v = (MkVariable)0;
+			}
+
+			if( hasEval ) {
+				evalstr = (char *)mk_com_memory( (void*)evalstr, 0 );
 			}
 
 			p = next;
 		} else {
 			q = p + 1;
-			v = mk_vs_findVarBySubstr( vs, p, q );
+
+			cmd = (MkCommand)0;
+			v   = mk_vs_findVarBySubstr( vs, p, q );
 
 			p = q;
 		}
 
-		sb_pushVar( &sb, v );
+		if( cmd != (MkCommand)0 ) {
+			int cmdExitStatus;
+
+			mk_sl_clear( results );
+			if( ( cmdExitStatus = mk_cmd_eval( cmd, vs, args, results ) ) == 0 ) {
+				size_t i, n;
+				n = mk_sl_getSize( results );
+				for( i = 0; i < n; ++i ) {
+					mk_sb_quoteAndPushStr( &sb, mk_sl_at( results, i ) );
+				}
+			}
+		} else if( v != (MkVariable)0 ) {
+			mk_sb_pushVar( &sb, v );
+		}
 	}
 
-	return sb_done( &sb );
+	(void)mk_com_memory( cmdsb.buffer, 0 );
+
+	return mk_sb_done( &sb );
 }
 char *mk_vs_eval( MkVariableSet vs, const char *s ) {
 	return mk_vs_evalSubstr_r( vs, s, (const char *)0 );

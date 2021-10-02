@@ -16,8 +16,19 @@
 
 #include "mk-basic-stringList.h"
 
+typedef struct MkCommand_s *MkCommand;
 typedef struct MkVariable_s *MkVariable;
 typedef struct MkVariableSet_s *MkVariableSet;
+
+typedef int(*MkCmd_Eval_fn_t)(MkCommand cmd, MkVariableSet context, MkStrList args, MkStrList results);
+
+MkCommand mk_cmd_new( const char *name, MkCmd_Eval_fn_t eval );
+void      mk_cmd_delete( MkCommand cmd );
+
+MkCommand mk_cmd_findBySubstr( const char *s, const char *e );
+MkCommand mk_cmd_findByStr( const char *s );
+
+int mk_cmd_eval( MkCommand cmd, MkVariableSet context, MkStrList args, MkStrList results );
 
 MkVariableSet mk_vs_new();
 void          mk_vs_delete( MkVariableSet vs );
