@@ -20,6 +20,8 @@
 #include "mk-basic-stringBuilder.h"
 #include "mk-basic-stringList.h"
 
+#include <string.h>
+
 /*
 
 	COMMAND FORMAT
