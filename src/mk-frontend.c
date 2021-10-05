@@ -127,6 +127,8 @@ void mk_main_init( int argc, char **argv ) {
 		/* OpenGL - GLFW/GLEW */
 		{ { "GL/glfw.h", "GL/glfw.h", "GL/glfw.h" },
 		    "glfw" },
+		{ { "GLFW/glfw3.h", "GLFW/glfw3.h", "GLFW/glfw3.h" },
+			"glfw3" },
 		{ { "GL/glew.h", "GL/glew.h", "GL/glew.h" },
 		    "glew" },
 
@@ -214,6 +216,8 @@ void mk_main_init( int argc, char **argv ) {
 		    { "-lglu32", "-lGLU", "-lGLU" } },
 		{ "glfw",
 		    { "-lglfw", "-lglfw", "-lglfw" } },
+		{ "glfw3",
+			{ "-lglfw", "-lglfw", "-lglfw" } },
 		{ "glew",
 		    { "-lglew32", "-lGLEW", "-lGLEW" } },
 
