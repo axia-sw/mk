@@ -276,7 +276,7 @@ void mk_main_init( int argc, char **argv ) {
 
 		/* POSIX */
 		{ "realtime",
-		    { (const char *)0, "-lrt", "-lrt" } },
+		    { (const char *)0, "-lrt", (const char *)0 } },
 		{ "math",
 		    { (const char *)0, "-lm", "-lm" } },
 
