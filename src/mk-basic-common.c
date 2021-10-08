@@ -19,6 +19,7 @@
 #include "mk-basic-fileSystem.h"
 #include "mk-basic-logging.h"
 #include "mk-basic-memory.h"
+#include "mk-basic-stringBuilder.h"
 #include "mk-defs-config.h"
 #include "mk-defs-platform.h"
 #include "mk-frontend.h"
@@ -299,19 +300,16 @@ void mk_com_substExt( char *dst, size_t dstn, const char *src, const char *ext )
 	mk_com_strcpy( &dst[p - src], dstn - ( size_t )( p - src ), ext );
 }
 
-/* run a command in the shell */
-int mk_com_shellf( const char *format, ... ) {
-	static char cmd[16384];
-	va_list args;
+/* internal shell formatted command runner */
+static char *int_prologue_shellfv( const char *format, va_list args ) {
+	static char cmd[ 16384 ];
 
-	va_start( args, format );
 #if MK_SECLIB
 	vsprintf_s( cmd, sizeof( cmd ), format, args );
 #else
 	vsnprintf( cmd, sizeof( cmd ), format, args );
 	cmd[sizeof( cmd ) - 1] = 0;
 #endif
-	va_end( args );
 
 #if MK_WINDOWS_ENABLED
 	{
@@ -337,6 +335,17 @@ int mk_com_shellf( const char *format, ... ) {
 	}
 
 	fflush( mk__g_siof[kMkSIO_Err] );
+	return cmd;
+}
+
+/* run a command in the shell */
+int mk_com_shellf( const char *format, ... ) {
+	va_list args;
+	char *cmd;
+
+	va_start( args, format );
+	cmd = int_prologue_shellfv( format, args );
+	va_end( args );
 
 	return system( cmd );
 }
@@ -581,4 +590,65 @@ void mk_com_fixpath( char *path ) {
 #endif
 
 	(void)path;
+}
+
+/* read a program's output into a string */
+char *mk_com_readShellf( const char *format, ... ) {
+#if MK_WINDOWS_ENABLED
+# define popen _popen
+# define pclose _pclose
+#endif
+	MkStringBuilder sb;
+	va_list args;
+	FILE *fp;
+	char *cmd;
+	char buf[ 512 ];
+	int numlives = 3;
+	int exitstatus;
+
+	va_start( args, format );
+	cmd = int_prologue_shellfv( format, args );
+	va_end( args );
+
+	if( ( fp = popen( cmd, "r" ) ) == (FILE *)0 ) {
+		mk_log_errorMsg( "Failed to execute program." );
+		return (char *)0;
+	}
+
+	mk_sb_init( &sb, 8192 );
+	for(;;) {
+		size_t n;
+
+		buf[0] = '\0';
+		n = fread( &buf[0], 1, sizeof(buf) - 1, fp );
+		if( !n ) {
+			if( feof( fp ) ) {
+				break;
+			}
+
+			if( --numlives > 0 ) {
+				continue;
+			}
+
+			/* FIXME: Say something about the failure here */
+			break;
+		}
+
+		if( n >= sizeof(buf) ) {
+			mk_log_fatalError( "Unexpected overflow reading from pipe." );
+		}
+
+		buf[ n%sizeof(buf) ] = '\0';
+		mk_sb_pushSubstr( &sb, &buf[0], &buf[n] );
+	}
+
+	if( ( exitstatus = pclose(fp) ) != EXIT_SUCCESS ) {
+		mk_log_errorMsg( mk_com_va( "Command exited with status: %i (0x%.8X)", exitstatus, (uint32_t)(exitstatus) ) );
+	}
+
+	return mk_sb_done( &sb );
+#if MK_WINDOWS_ENABLED
+# undef pclose
+# undef popen
+#endif
 }

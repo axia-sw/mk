@@ -49,6 +49,7 @@ char *      mk_com_append( char *dst, const char *src );
 const char *mk_com_extractDir( char *buf, size_t n, const char *filename );
 void        mk_com_substExt( char *dst, size_t dstn, const char *src, const char *ext );
 int         mk_com_shellf( const char *format, ... );
+char *      mk_com_readShellf( const char *format, ... );
 int         mk_com_matchPath( const char *rpath, const char *apath );
 int         mk_com_getIntDate( void );
 
