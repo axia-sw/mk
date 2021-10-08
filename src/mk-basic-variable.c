@@ -443,7 +443,7 @@ void mk_v_setValueByVariable( MkVariable v, MkVariable other ) {
 }
 
 static const char *strchrz( const char *s, const char *e, char ch ) {
-	return mk_com_memchrz( s, (size_t)(ptrdiff_t)( e - s ), ch );
+	return (const char *)mk_com_memchrz( s, (size_t)(ptrdiff_t)( e - s ), ch );
 }
 
 char *mk_vs_evalSubstr_r( MkVariableSet vs, const char *s, const char *e ) {
