@@ -643,7 +643,7 @@ char *mk_com_readShellf( const char *format, ... ) {
 	}
 
 	if( ( exitstatus = pclose(fp) ) != EXIT_SUCCESS ) {
-		mk_log_errorMsg( mk_com_va( "Command exited with status: %i (0x%.8X)", exitstatus, (uint32_t)(exitstatus) ) );
+		mk_log_errorMsg( mk_com_va( "Command exited with status: %i (0x%.8X)", exitstatus, (unsigned int)(exitstatus) ) );
 	}
 
 	return mk_sb_done( &sb );
