@@ -43,6 +43,9 @@ mk_uint32_t mk_async_atomicInc_pre( volatile mk_uint32_t *dst ) {
 mk_uint32_t mk_async_atomicDec_post( volatile mk_uint32_t *dst ) {
 	return AX_ATOMIC_FETCH_SUB_FULL32( dst, 1 ) - 1;
 }
+void *mk_async_atomicSetPtr_pre( volatile void *dst, void *src ) {
+	return AX_ATOMIC_EXCHANGE_FULLPTR( dst, src );
+}
 
 mk_semaphore_t *mk_async_semInit( mk_semaphore_t *sem, mk_uint32_t base ) {
 	return (mk_semaphore_t*)axth_sem_init( (axth_sem_t*)sem, base );
