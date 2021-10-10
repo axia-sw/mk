@@ -2559,6 +2559,9 @@ static void axth__win32_setThreadName( axthread_t *p, const char *pszName )
 		} while( 0 );
 	}
 # endif
+
+	((void)p);
+	((void)pszName);
 }
 # endif
 static void axth__setCurrentThreadName( axthread_t *pThread, const char *pszName )
