@@ -47,6 +47,8 @@
 #define MK_HOST_CPU_AARCH64 0
 #define MK_HOST_CPU_PPC 0
 #define MK_HOST_CPU_MIPS 0
+#define MK_HOST_CPU_WASM 0
+#define MK_HOST_CPU_RISCV 0
 
 #if defined( __amd64__ ) || defined( __x86_64__ ) || defined( _M_X64 )
 #	undef MK_HOST_CPU_X86_64
@@ -69,6 +71,12 @@
 #elif defined( __mips__ ) || defined( __MIPS__ )
 #	undef MK_HOST_CPU_MIPS
 #	define MK_HOST_CPU_MIPS 1
+#elif defined( __webassembly__ )
+#	undef MK_HOST_CPU_WASM
+#	define MK_HOST_CPU_WASM 1
+#elif defined( __riscv__ )
+#	undef MK_HOST_CPU_RISCV
+#	define MK_HOST_CPU_RISCV 1
 #else
 #	error "Unrecognized host CPU."
 #endif
@@ -123,6 +131,14 @@
 #		define MK_NORETURN _declspec( noreturn )
 #	else
 #		define MK_NORETURN __attribute__( ( noreturn ) )
+#	endif
+#endif
+
+#ifndef MK_UNUSED
+#	if MK_VC_VER
+#		define MK_UNUSED /* doesn't exist for MSVC? */
+#	else
+#		define MK_UNUSED __attribute__( ( unused ) )
 #	endif
 #endif
 

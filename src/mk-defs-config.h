@@ -236,13 +236,37 @@ Modification is generally not encouraged.
 #ifndef MK_PLATFORM_OS_NAME_CYGWIN
 #	define MK_PLATFORM_OS_NAME_CYGWIN "cygwin"
 #endif
-/* Mac OS X */
+/* Mac OS X / macOS */
 #ifndef MK_PLATFORM_OS_NAME_MACOSX
-#	define MK_PLATFORM_OS_NAME_MACOSX "apple"
+#	define MK_PLATFORM_OS_NAME_MACOSX "macos"
 #endif
 /* (GNU/)Linux */
 #ifndef MK_PLATFORM_OS_NAME_LINUX
 #	define MK_PLATFORM_OS_NAME_LINUX "linux"
+#endif
+/* iOS */
+#ifndef MK_PLATFORM_OS_NAME_IOS
+#	define MK_PLATFORM_OS_NAME_IOS "ios"
+#endif
+/* iPadOS */
+#ifndef MK_PLATFORM_OS_NAME_IPADOS
+#	define MK_PLATFORM_OS_NAME_IPADOS "ipados"
+#endif
+/* tvOS */
+#ifndef MK_PLATFORM_OS_NAME_TVOS
+#	define MK_PLATFORM_OS_NAME_TVOS "tvos"
+#endif
+/* watchOS */
+#ifndef MK_PLATFORM_OS_NAME_WATCHOS
+#	define MK_PLATFORM_OS_NAME_WATCHOS "watchos"
+#endif
+/* Android */
+#ifndef MK_PLATFORM_OS_NAME_ANDROID
+#	define MK_PLATFORM_OS_NAME_ANDROID "android"
+#endif
+/* Fuschia */
+#ifndef MK_PLATFORM_OS_NAME_FUSCHIA
+#	define MK_PLATFORM_OS_NAME_FUSCHIA "fuschia"
 #endif
 /* Some UNIX variant (e.g., FreeBSD, Solaris) */
 #ifndef MK_PLATFORM_OS_NAME_UNIX
@@ -290,6 +314,10 @@ Modification is generally not encouraged.
 /* WebAssembly */
 #ifndef MK_PLATFORM_CPU_NAME_WASM
 #	define MK_PLATFORM_CPU_NAME_WASM "wasm"
+#endif
+/* Risc-V */
+#ifndef MK_PLATFORM_CPU_NAME_RISCV
+#	define MK_PLATFORM_CPU_NAME_RISCV "riscv"
 #endif
 
 /*
@@ -339,6 +367,10 @@ NOTE: This should not be relied upon, as its existence is a flaw.
 #		define MK_PLATFORM_CPU_NAME MK_PLATFORM_CPU_NAME_PPC
 #	elif MK_HOST_CPU_MIPS
 #		define MK_PLATFORM_CPU_NAME MK_PLATFORM_CPU_NAME_MIPS
+#	elif MK_HOST_CPU_WASM
+#		define MK_PLATFORM_CPU_NAME MK_PLATFORM_CPU_NAME_WASM
+#	elif MK_HOST_CPU_RISCV
+#		define MK_PLATFORM_CPU_NAME MK_PLATFORM_CPU_NAME_RISCV
 #	else
 #		error "MK_PLATFORM_CPU_NAME: Unhandled CPU."
 #	endif
