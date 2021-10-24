@@ -225,6 +225,9 @@ MK_UNUSED
 static int bldno_isReady( MkBuildNode bldno ) {
 	return +( bldno->async.inputsRemaining == 0 );
 }
+
+static void bldctx_queue( MkBuildContext, MkBuildNode );
+
 static void bldno_syncCompletion( MkBuildNode bldno ) {
 	MkBuildNode node;
 	mk_uint32_t i;
@@ -235,7 +238,7 @@ static void bldno_syncCompletion( MkBuildNode bldno ) {
 		node = bldno->outputs.nodes[ i ];
 
 		if( mk_async_atomicDec_post( &node->async.inputsRemaining ) == 0 ) {
-			// FIXME: !!! APPEND TO READY QUEUE !!!
+			bldctx_queue( node->ctx, node );
 		}
 	}
 }
@@ -356,16 +359,41 @@ static void bldctx_cancel( MkBuildContext ctx ) {
 	}
 }
 
+static void bldctx_queue( MkBuildContext ctx, MkBuildNode node ) {
+	MK_ASSERT( ctx != (MkBuildContext)0 );
+	MK_ASSERT( node != (MkBuildNode)0 );
+
+	for(;;) {
+		if( ctx->readyQueue.count >= ctx->readyQueue.array.num ) {
+			break;
+		}
+
+		if( mk_async_atomicCmpSetPtr_post( &ctx->readyQueue.array.nodes[ ctx->readyQueue.count ], (void*)node, NULL ) == (void*)node ) {
+			(void)mk_async_atomicInc_pre( &ctx->readyQueue.count );
+			mk_async_semRaise( &ctx->readyQueue.waiter );
+			return;
+		}
+	}
+
+	bldctx_cancel( ctx );
+	MK_ASSERT_MSG( 0, "Failed to push job to queue" );
+}
+
 MK_UNUSED
 static int build_thread_f( mk_thread_t *thread, void *userdata ) {
 	MkBuildContext ctx;
 	MkBuildNode node;
 	mk_uint32_t index;
+	MkStrList inputFiles, outputFiles;
+	int i, n;
 	int r;
 	int canceled;
 
 	((void)thread);
 	ctx = (MkBuildContext)userdata;
+
+	inputFiles  = mk_sl_new();
+	outputFiles = mk_sl_new();
 
 	canceled = 0;
 	for(;;) {
@@ -378,6 +406,8 @@ static int build_thread_f( mk_thread_t *thread, void *userdata ) {
 			break;
 		}
 
+		/* Note, the index should not be out of sync with the count due to the
+		`  semaphore being signalled after each enqueue. */
 		index = mk_async_atomicInc_pre( &ctx->readyQueue.index );
 		MK_ASSERT_MSG( index < ctx->readyQueue.count, "Index is out of sync with job queue" );
 
@@ -385,13 +415,27 @@ static int build_thread_f( mk_thread_t *thread, void *userdata ) {
 			continue;
 		}
 
+		/* generate the input and output file arrays */
+		mk_sl_clear( inputFiles );
+		n = node->inputs.num;
+		for( i = 0; i < n; ++i ) {
+			mk_sl_pushBack( inputFiles, node->inputs.nodes[i]->filename );
+		}
+
+		mk_sl_clear( outputFiles );
+		n = node->outputs.num;
+		for( i = 0; i < n; ++i ) {
+			mk_sl_pushBack( outputFiles, node->outputs.nodes[i]->filename );
+		}
+
+		/* invoke the build step */
 		r = 1;
 		if( node->pfn_build != NULL ) {
 			r =
 				node->pfn_build(
 					node, node->userData,
-					/* inputs=*/(MkStrList)0,
-					/*outputs=*/(MkStrList)0
+					inputFiles,
+					outputFiles
 				);
 		}
 
@@ -413,6 +457,9 @@ static int build_thread_f( mk_thread_t *thread, void *userdata ) {
 			}
 		}
 	}
+
+	mk_sl_delete( inputFiles );
+	mk_sl_delete( outputFiles );
 
 	return canceled == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
