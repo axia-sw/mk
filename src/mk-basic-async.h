@@ -62,6 +62,7 @@ int          mk_async_threadGetExitCode( const mk_thread_t * );
 mk_uint32_t mk_async_atomicInc_pre( volatile mk_uint32_t *dst );
 mk_uint32_t mk_async_atomicDec_post( volatile mk_uint32_t *dst );
 void *      mk_async_atomicSetPtr_pre( volatile void *dst, void *src );
+void *      mk_async_atomicCmpSetPtr_post( volatile void *dst, void *src, void *cmp );
 
 /*
 
