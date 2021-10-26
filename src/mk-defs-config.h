@@ -214,6 +214,54 @@ Default: "debug"
 
 /*
 ================
+MK_DEFAULT_COMPILER_NAME
+
+The name of the compiler to use by default if none are specified.
+================
+*/
+#ifndef MK_DEFAULT_COMPILER_NAME
+#	ifdef __clang__
+#		define MK_DEFAULT_COMPILER_NAME "clang"
+#	else
+#		define MK_DEFAULT_COMPILER_NAME "gcc"
+#	endif
+#endif
+
+/*
+================
+MK_DEFAULT_CFLAGS_WARNINGS
+
+The default warning flags to use if CFLAGS_WARNINGS is not defined.
+================
+*/
+#ifndef MK_DEFAULT_CFLAGS_WARNINGS
+#	define MK_DEFAULT_CFLAGS_WARNINGS "-W -Wall -Wextra -Warray-bounds -pedantic"
+#endif
+
+/*
+================
+MK_DEFAULT_CFLAGS_DEBUG
+
+The default flags to use in debug builds if CFLAGS_DEBUG is not defined.
+================
+*/
+#ifndef MK_DEFAULT_CFLAGS_DEBUG
+#	define MK_DEFAULT_CFLAGS_DEBUG "-g -D_DEBUG"
+#endif
+
+/*
+================
+MK_DEFAULT_CFLAGS_RELEASE
+
+The default flags to use in release builds if CFLAGS_RELEASE is not defined.
+================
+*/
+#ifndef MK_DEFAULT_CFLAGS_RELEASE
+#	define MK_DEFAULT_CFLAGS_RELEASE "-DNDEBUG -s -O2 -fno-strict-aliasing"
+#endif
+
+/*
+================
 MK_PLATFORM_OS_NAME_*
 
 The names of the various operating system platforms. This is how the platforms

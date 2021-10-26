@@ -207,11 +207,7 @@ const char *mk_bld_getCompiler( int iscxx ) {
 		if( p != (const char *)0 ) {
 			mk_com_strcpy( cc, sizeof( cc ), p );
 		} else {
-#ifdef __clang__
-			mk_com_strcpy( cc, sizeof( cc ), "clang" );
-#else
-			mk_com_strcpy( cc, sizeof( cc ), "gcc" );
-#endif
+			mk_com_strcpy( cc, sizeof( cc ), MK_DEFAULT_COMPILER_NAME );
 		}
 
 		p = getenv( "CXX" );
@@ -249,7 +245,7 @@ void mk_bld_getCFlags_warnings( char *flags, size_t nflags ) {
 			mk_com_strcat( defflags, sizeof( defflags ), " " );
 		} else {
 			mk_com_strcpy( defflags, sizeof( defflags ),
-			    "-W -Wall -Wextra -Warray-bounds -pedantic " );
+			    MK_DEFAULT_CFLAGS_WARNINGS " " );
 		}
 
 		didinit = 1;
@@ -395,7 +391,7 @@ void mk_bld_getCFlags_config( char *flags, size_t nflags, int projarch ) {
 			mk_com_strcpy( defdbgflags, sizeof( defdbgflags ), p );
 			mk_com_strcat( defdbgflags, sizeof( defdbgflags ), " " );
 		} else {
-			mk_com_strcpy( defdbgflags, sizeof( defdbgflags ), "-g -D_DEBUG " );
+			mk_com_strcpy( defdbgflags, sizeof( defdbgflags ), MK_DEFAULT_CFLAGS_DEBUG " " );
 		}
 
 		p = getenv( "CFLAGS_RELEASE" );
@@ -404,7 +400,7 @@ void mk_bld_getCFlags_config( char *flags, size_t nflags, int projarch ) {
 			mk_com_strcat( defrelflags, sizeof( defrelflags ), " " );
 		} else {
 			mk_com_strcpy( defrelflags, sizeof( defrelflags ),
-			    "-DNDEBUG -s -O2 -fno-strict-aliasing " );
+			    MK_DEFAULT_CFLAGS_RELEASE " " );
 		}
 
 		didinit = 1;
