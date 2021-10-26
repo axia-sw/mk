@@ -9,7 +9,7 @@
 
 INSTALLDIR ?= /usr/local
 INSTALLBINDIR ?= $(INSTALLDIR)/bin
-INSTALLMANDIR ?= /usr/share/man
+INSTALLMANDIR ?= $(INSTALLDIR)/share/man
 
 VALID_CONFIGS := DEBUG RELEASE
 CONFIG        ?= DEBUG
@@ -232,11 +232,11 @@ clean:
 install: release
 	@mkdir -p "$(INSTALLBINDIR)"
 	@mkdir -p "$(INSTALLMANDIR)/man1"
-	install -m 444 -t "$(INSTALLMANDIR)/man1" doc/mk.1
-	install -m 551 -t "$(INSTALLBINDIR)" "$(EXE_TARGET_R)"
+	@install -v -C    -m 644 doc/mk.1 "$(INSTALLMANDIR)/man1"
+	@install -v -C -s -m 551 "$(EXE_TARGET_R)" "$(INSTALLBINDIR)"
 
 install-debug: install debug
-	install -m 551 -t "$(INSTALLBINDIR)" "$(EXE_TARGET_D)"
+	@install -v -C    -m 551 "$(EXE_TARGET_D)" "$(INSTALLBINDIR)"
 
 
 

@@ -556,7 +556,7 @@ void mk_main_init( int argc, char **argv ) {
 	/* show the version */
 	if( mk__g_flags & kMkFlag_ShowVersion_Bit ) {
 		printf(
-		    "mk " MK_VERSION_STR " - compiled %s\nCopyright (c) 2012-2018 NotKyon\n\n"
+		    "mk " MK_VERSION_STR " - compiled %s\nCopyright (c) 2012-2021 NotKyon\n\n"
 		    "This software contains ABSOLUTELY NO WARRANTY.\n\n",
 		    __DATE__ );
 	}
