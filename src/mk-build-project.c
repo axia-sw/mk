@@ -416,18 +416,18 @@ void mk_prj_completeExtraLibs( MkProject proj, char *extras, size_t n ) {
 /* add a source file to a project */
 void mk_prj_addSourceFile( MkProject proj, const char *src ) {
 	const char *p;
+	MkLanguage lang;
 
 	MK_ASSERT( proj != (MkProject)0 );
 	MK_ASSERT( src != (const char *)0 );
 
 	MK_ASSERT( proj->sources != (MkStrList)0 );
 
-	if( ( p = strrchr( src, '.' ) ) != (const char *)0 ) {
-		if( !strcmp( p, ".cc" ) || !strcmp( p, ".cxx" ) || !strcmp( p, ".cpp" ) || !strcmp( p, ".c++" ) ) {
-			proj->config |= kMkProjCfg_UsesCxx_Bit;
-		} else if( !strcmp( p, ".mm" ) ) {
-			proj->config |= kMkProjCfg_UsesCxx_Bit;
-		}
+	/* FIXME: Projects should really store which languages they use overall, and
+	`         which source files use which language. */
+	lang = mk_fs_getLanguage( src );
+	if( mk_fs_isLangCxx(lang) || lang == kMkLanguage_ObjCxx ) {
+		proj->config |= kMkProjCfg_UsesCxx_Bit;
 	}
 
 	mk_sl_pushBack( proj->sources, src );
@@ -437,7 +437,7 @@ void mk_prj_addSourceFile( MkProject proj, const char *src ) {
 		p = strrchr( src, '\\' );
 	}
 
-	if( p ) {
+	if( p != (const char *)0 ) {
 		char temp[PATH_MAX], rel[PATH_MAX];
 
 		mk_com_strncpy( temp, sizeof( temp ), src, p - src );
@@ -473,16 +473,6 @@ void mk_prj_addTestSourceFile( MkProject proj, const char *src ) {
 	MK_ASSERT( src != (const char *)0 );
 
 	MK_ASSERT( proj->testsources != (MkStrList)0 );
-
-	/*
-	if( (p = strrchr(src, '.')) != (const char *)0 ) {
-		if( !strcmp(p, ".cc") || !strcmp(p, ".cxx") || !strcmp(p, ".cpp" )
-		 || !strcmp(p, ".c++"))
-			proj->config |= kMkProjCfg_UsesCxx_Bit;
-		else if(!strcmp(p, ".mm"))
-			proj->config |= kMkProjCfg_UsesCxx_Bit;
-	}
-	*/
 
 	mk_sl_pushBack( proj->testsources, src );
 }

@@ -88,3 +88,9 @@ typedef enum MkLanguage_e {
 	kMkLanguage_Cxx_Default = kMkLanguage_Cxx17
 } MkLanguage;
 MkLanguage mk_fs_getLanguage( const char *filename );
+
+#define mk__int_rangeCheck(X_,A_,B_) ( ((X_) - (A_)) < ((B_) - (A_)) )
+
+#define mk_fs_isLangC(Lang_) (mk__int_rangeCheck((Lang_),kMkLanguage_C_Begin,kMkLanguage_C_End))
+#define mk_fs_isLangCxx(Lang_) (mk__int_rangeCheck((Lang_),kMkLanguage_Cxx_Begin,kMkLanguage_Cxx_End))
+#define mk_fs_isLangObjCOrCxx(Lang_) (mk__int_rangeCheck((Lang_),kMkLanguage_ObjC_Begin,kMkLanguage_ObjCxx_End))
