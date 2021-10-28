@@ -148,7 +148,7 @@ void mk_main_init( int argc, char **argv ) {
 		{ { "SFML/Config.hpp", "SFML/Config.hpp", "SFML/Config.hpp" },
 		    "sfml" },
 
-		/* Ogg/Vorbis */
+		/* Ogg/Vorbis/Opus */
 		{ { "ogg/ogg.h", "ogg/ogg.h", "ogg/ogg.h" },
 		    "ogg" },
 		{ { "vorbis/codec.h", "vorbis/codec.h", "vorbis/codec.h" },
@@ -157,6 +157,12 @@ void mk_main_init( int argc, char **argv ) {
 		    "vorbisenc" },
 		{ { "vorbis/vorbisfile.h", "vorbis/vorbisfile.h", "vorbis/vorbisfile.h" },
 		    "vorbisfile" },
+		{ { "opus/opus.h", "opus/opus.h", "opus/opus.h" },
+			"opus" },
+		{ { "opus/opusenc.h", "opus/opusenc.h", "opus/opusenc.h" },
+			"opusenc" },
+		{ { "opus/opusfile.h", "opus/opusfile.h", "opus/opusfile.h" },
+			"opusfile" },
 
 		/* Windows */
 		{ { "winuser.h", (const char *)0, (const char *)0 },
@@ -244,7 +250,7 @@ void mk_main_init( int argc, char **argv ) {
 		        "-lsfml-window-s -lsfml-graphics-s -lsfml-audio-s"
 		        " -lsfml-network-s -lsfml-main -lsfml-system-s" } },
 
-		/* Ogg/Vorbis */
+		/* Ogg/Vorbis/Opus */
 		{ "ogg",
 		    { "-logg", "-logg", "-logg" } },
 		{ "vorbis",
@@ -253,6 +259,12 @@ void mk_main_init( int argc, char **argv ) {
 		    { "-lvorbisenc", "-lvorbisenc", "-lvorbisenc" } },
 		{ "vorbisfile",
 		    { "-lvorbisfile", "-lvorbisfile", "-lvorbisfile" } },
+		{ "opus",
+			{ "-lopus", "-lopus", "-lopus" } },
+		{ "opusenc",
+			{ "-lopusenc", "-lopusenc", "-lopusenc" } },
+		{ "opusfile",
+			{ "-lopusfile", "-lopusfile", "-lopusfile" } },
 
 		/* Windows */
 		{ "user32",
