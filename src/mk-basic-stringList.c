@@ -15,6 +15,7 @@
 #include "mk-basic-stringList.h"
 
 #include "mk-basic-assert.h"
+#include "mk-basic-async.h"
 #include "mk-basic-common.h"
 #include "mk-basic-debug.h"
 #include "mk-basic-memory.h"
@@ -33,6 +34,7 @@ struct MkStrList_s {
 
 	struct MkStrList_s *prev, *next;
 };
+mk_mutex_t mk__g_arr_lock = MK_MUTEX_INITIALIZER;
 struct MkStrList_s *mk__g_arr_head = (struct MkStrList_s *)0;
 struct MkStrList_s *mk__g_arr_tail = (struct MkStrList_s *)0;
 
@@ -46,6 +48,7 @@ MkStrList mk_sl_new( void ) {
 	arr->size     = 0;
 	arr->data     = (char **)0;
 
+	mk_async_mtxLock(&mk__g_arr_lock);
 	arr->next = (struct MkStrList_s *)0;
 	if( ( arr->prev = mk__g_arr_tail ) != (struct MkStrList_s *)0 ) {
 		mk__g_arr_tail->next = arr;
@@ -53,6 +56,7 @@ MkStrList mk_sl_new( void ) {
 		mk__g_arr_head = arr;
 	}
 	mk__g_arr_tail = arr;
+	mk_async_mtxUnlock(&mk__g_arr_lock);
 
 	return arr;
 }
@@ -135,7 +139,10 @@ void mk_sl_clear( MkStrList arr ) {
 }
 
 /* delete an array */
-void mk_sl_delete( MkStrList arr ) {
+enum {
+	kMkSLDelete_Sync_Bit = 0x01
+};
+void mk_sl_deleteWithFlags( MkStrList arr, int flags ) {
 	if( !arr ) {
 		return;
 	}
@@ -146,6 +153,9 @@ void mk_sl_delete( MkStrList arr ) {
 
 	mk_sl_clear( arr );
 
+	if( flags & kMkSLDelete_Sync_Bit ) {
+		mk_async_mtxLock( &mk__g_arr_lock );
+	}
 	if( arr->prev ) {
 		arr->prev->next = arr->next;
 	} else {
@@ -157,6 +167,9 @@ void mk_sl_delete( MkStrList arr ) {
 	} else {
 		mk__g_arr_tail = arr->prev;
 	}
+	if( flags & kMkSLDelete_Sync_Bit ) {
+		mk_async_mtxUnlock( &mk__g_arr_lock );
+	}
 
 	arr->prev = (MkStrList)0;
 	arr->next = (MkStrList)0;
@@ -167,6 +180,10 @@ void mk_sl_delete( MkStrList arr ) {
 	mk_dbg_leave();
 #endif
 }
+void mk_sl_delete( MkStrList arr )
+{
+	mk_sl_deleteWithFlags( arr, kMkSLDelete_Sync_Bit );
+}
 
 /* delete all arrays */
 void mk_sl_deleteAll( void ) {
@@ -174,9 +191,11 @@ void mk_sl_deleteAll( void ) {
 	mk_dbg_enter("mk_sl_deleteAll");
 #endif
 
+	mk_async_mtxLock( &mk__g_arr_lock );
 	while( mk__g_arr_head ) {
-		mk_sl_delete( mk__g_arr_head );
+		mk_sl_deleteWithFlags( mk__g_arr_head, 0 );
 	}
+	mk_async_mtxUnlock( &mk__g_arr_lock );
 
 #if MK_LOG_MEMORY_ALLOCS_ENABLED
 	mk_dbg_leave();
