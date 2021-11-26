@@ -227,6 +227,8 @@ void mk_fs_makeDirs( const char *dirs ) {
 			if( ishidden ) {
 				SetFileAttributesA( buf, FILE_ATTRIBUTE_HIDDEN );
 			}
+#else
+			((void)ishidden);
 #endif
 
 			if( p[0] == '/' && p[1] == '.' ) {
