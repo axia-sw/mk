@@ -132,6 +132,10 @@ void mk_main_init( int argc, char **argv ) {
 		{ { "GL/glew.h", "GL/glew.h", "GL/glew.h" },
 		    "glew" },
 
+		/* Vulkan */
+		{ { "vulkan/vulkan.h", "vulkan/vulkan.h", "vulkan/vulkan.h" },
+			"vulkan" },
+
 		/* SDL */
 		{ { "SDL/sdl.h", "SDL/sdl.h", "SDL/sdl.h" },
 		    "sdl" },
@@ -226,6 +230,10 @@ void mk_main_init( int argc, char **argv ) {
 			{ "-lglfw", "-lglfw", "-lglfw" } },
 		{ "glew",
 		    { "-lglew32", "-lGLEW", "-lGLEW" } },
+
+		/* Vulkan */
+		{ "vulkan",
+			{ "-lvulkan", "-lvulkan", "-lvulkan" } },
 
 		/* SDL */
 		{ "sdl",
