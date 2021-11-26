@@ -27,10 +27,12 @@
 
 typedef axth_u32_t mk_uint32_t;
 
-typedef axthread_t mk_thread_t;
-typedef axth_sem_t mk_semaphore_t;
+typedef axthread_t    mk_thread_t;
+typedef axth_qmutex_t mk_mutex_t;
+typedef axth_sem_t    mk_semaphore_t;
 
 #define MK_THREAD_INITIALIZER    AXTHREAD_INITIALIZER
+#define MK_MUTEX_INITIALIZER     AXTHREAD_QMUTEX_INITIALIZER
 #define MK_SEMAPHORE_INITIALIZER AXTHREAD_SEM_INITIALIZER
 
 typedef int( *mk_thread_func_t )( mk_thread_t *, void * );
@@ -63,6 +65,39 @@ mk_uint32_t mk_async_atomicInc_pre( volatile mk_uint32_t *dst );
 mk_uint32_t mk_async_atomicDec_post( volatile mk_uint32_t *dst );
 void *      mk_async_atomicSetPtr_pre( volatile void *dst, void *src );
 void *      mk_async_atomicCmpSetPtr_post( volatile void *dst, void *src, void *cmp );
+
+/*
+
+	MUTEXES
+	-------
+
+	A mutex is a synchronization primitive used to control which threads have
+	access to some resource at a given point in time. Mutexes specify a "mutual
+	exclusion" access to a resource, so only one mutex holder can have access to
+	the resource it's guarding at a given time. i.e., "locking" the resource.
+
+	To gain access to a resource, use mk_async_mtxLock(). This forces the
+	calling thread to wait until other mutexes have unlocked the resource. The
+	calling thread then locks the resource until it is released.
+
+	When done accessing a resource, use mk_async_mtxUnlock() to return control
+	to other threads that may be waiting to access said resource.
+
+	ALWAYS call mk_async_mtxUnlock() following a call to mk_async_mtxLock().
+	Failing to unlock a resource after it's been locked will cause other threads
+	to wait forever, hanging the program. Be especially mindful of early exits
+	in functions where a lock has been acquired.
+
+	Reduce the amount of time you access a resource within a lock as much as
+	possible. If work can be done without necessarily having access to that
+	resource right away, then try to do that work before locking the resource.
+
+*/
+
+mk_mutex_t *mk_async_mtxInit( mk_mutex_t *mtx );
+mk_mutex_t *mk_async_mtxFini( mk_mutex_t *mtx );
+void        mk_async_mtxLock( mk_mutex_t *mtx );
+void        mk_async_mtxUnlock( mk_mutex_t *mtx );
 
 /*
 

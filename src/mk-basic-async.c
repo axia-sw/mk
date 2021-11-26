@@ -50,6 +50,19 @@ void *mk_async_atomicCmpSetPtr_post( volatile void *dst, void *src, void *cmp ) 
 	return AX_ATOMIC_COMPARE_EXCHANGE_FULLPTR( dst, src, cmp );
 }
 
+mk_mutex_t *mk_async_mtxInit( mk_mutex_t *mtx ) {
+	return (mk_mutex_t*)axth_qmutex_init( (axth_qmutex_t*)mtx );
+}
+mk_mutex_t *mk_async_mtxFini( mk_mutex_t *mtx ) {
+	return (mk_mutex_t*)axth_qmutex_fini( (axth_qmutex_t*)mtx );
+}
+void mk_async_mtxLock( mk_mutex_t *mtx ) {
+	axth_qmutex_acquire( (axth_qmutex_t*)mtx, AXTHREAD_DEFAULT_SPIN_COUNT );
+}
+void mk_async_mtxUnlock( mk_mutex_t *mtx ) {
+	axth_qmutex_release( (axth_qmutex_t*)mtx );
+}
+
 mk_semaphore_t *mk_async_semInit( mk_semaphore_t *sem, mk_uint32_t base ) {
 	return (mk_semaphore_t*)axth_sem_init( (axth_sem_t*)sem, base );
 }
