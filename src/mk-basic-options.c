@@ -73,9 +73,12 @@ static const char *mk_opt__getGlobalContainerDir( void ) {
 		}                                                \
 	} while( 0 )
 
+		MK__TRYENV( "MKPATH" );
+
 #if MK_PWD_HOMEPATH_DETECTION_ENABLED
 		if( !szDir[0] && ( pwd = getpwuid( getuid() ) ) != (const struct passwd *)0 ) {
 			mk_com_strcpy( szDir, sizeof( szDir ), pwd->pw_dir );
+			mk_com_strcat( szDir, sizeof( szDir ), "/.local/share/" );
 		}
 #endif
 #if MK_WINDOWS_ENABLED
@@ -83,7 +86,20 @@ static const char *mk_opt__getGlobalContainerDir( void ) {
 		MK__TRYENV( "USERPROFILE" );
 		MK__TRYENV( "APPDATA" );
 #endif
+#ifdef __APPLE__
+		/*
+			FIXME: Should this really be "~/.local/share/", or should it be
+			`      somewhere like "~/Library/Application Support/"?
+		*/
+		if( !szDir[0] ) {
+			MK__TRYENV( "HOME" );
+			if( szDir[0] != '\0' ) {
+				mk_com_strcat( szDir, sizeof( szDir ), "/.local/share/" );
+			}
+		}
+#else
 		MK__TRYENV( "HOME" );
+#endif
 
 #undef MK__TRYENV
 
@@ -106,19 +122,24 @@ const char *mk_opt_getGlobalDir( void ) {
 	if( szDir[0] == '\0' ) {
 		mk_com_strcpy( szDir, sizeof( szDir ), mk_opt__getGlobalContainerDir() );
 		MK_ASSERT( mk_com_strends( szDir, "/" ) && "mk_opt__getGlobalContainerDir() didn't end path with '/'" );
-		mk_com_strcat( szDir, sizeof( szDir ), ".mk/" );
+
+		if( mk_com_strends( szDir, ".local/share/" ) ) {
+			mk_com_strcat( szDir, sizeof( szDir ), "mk/" );
+		} else {
+			mk_com_strcat( szDir, sizeof( szDir ), ".mk/" );
+		}
 	}
 
 	return szDir;
 }
-/* retrieve the .mk/share/ directory, where version-agnostic mk data can be stored */
+/* retrieve the .mk/anyver/ directory, where version-agnostic mk data can be stored */
 const char *mk_opt_getGlobalSharedDir( void ) {
 	static char szDir[PATH_MAX] = { '\0' };
 
 	if( szDir[0] == '\0' ) {
 		mk_com_strcpy( szDir, sizeof( szDir ), mk_opt_getGlobalDir() );
 		MK_ASSERT( mk_com_strends( szDir, "/" ) && "mk_opt_getGlobalDir() didn't end path with '/'" );
-		mk_com_strcat( szDir, sizeof( szDir ), "share/" );
+		mk_com_strcat( szDir, sizeof( szDir ), "anyver/" );
 	}
 
 	return szDir;
