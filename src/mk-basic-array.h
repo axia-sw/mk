@@ -99,6 +99,8 @@
 
 #define mk_arr_clear(Arr_)          ((void)(((Arr_).len) = 0))
 
+#define mk_arr_for(Arr_,Idx_)       for((Idx_)=0; (Idx_)<mk_arr_len(Arr_); (Idx_)+=1)
+
 typedef struct mk_array_info_s {
 	size_t *len;
 	void **ptr;
