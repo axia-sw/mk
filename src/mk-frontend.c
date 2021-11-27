@@ -14,6 +14,7 @@
  */
 #include "mk-frontend.h"
 
+#include "mk-basic-array.h"
 #include "mk-basic-assert.h"
 #include "mk-basic-common.h"
 #include "mk-basic-debug.h"
@@ -36,6 +37,220 @@
 #include <stdlib.h>
 #include <string.h>
 
+static const struct { const char *const header[3], *const lib; } autolinks[] = {
+	/* OpenGL */
+	{ { "GL/gl.h", "GL/gl.h", "OpenGL/OpenGL.h" },
+		"opengl" },
+	{ { (const char *)0, (const char *)0, "GL/gl.h" },
+		"opengl" },
+	{ { (const char *)0, (const char *)0, "OpenGL/gl.h" },
+		"opengl" },
+
+	/* OpenGL - GLU */
+	{ { "GL/glu.h", "GL/glu.h", "OpenGL/glu.h" },
+		"glu" },
+
+	/* OpenGL - GLFW/GLEW */
+	{ { "GL/glfw.h", "GL/glfw.h", "GL/glfw.h" },
+		"glfw" },
+	{ { "GLFW/glfw3.h", "GLFW/glfw3.h", "GLFW/glfw3.h" },
+		"glfw3" },
+	{ { "GL/glew.h", "GL/glew.h", "GL/glew.h" },
+		"glew" },
+
+	/* Vulkan */
+	{ { "vulkan/vulkan.h", "vulkan/vulkan.h", "vulkan/vulkan.h" },
+		"vulkan" },
+
+	/* SDL */
+	{ { "SDL/sdl.h", "SDL/sdl.h", "SDL/sdl.h" },
+		"sdl" },
+	{ { "SDL/sdl_mixer.h", "SDL/sdl_mixer.h", "SDL/sdl_mixer.h" },
+		"sdl_mixer" },
+	{ { "SDL/sdl_main.h", "SDL/sdl_main.h", "SDL/sdl_main.h" },
+		"sdl_main" },
+
+	/* SDL2 - EXPERIMENTAL */
+	{ { "SDL2/SDL.h", "SDL2/SDL.h", "SDL2/SDL.h" },
+		"sdl2" },
+
+	/* SFML */
+	{ { "SFML/Config.hpp", "SFML/Config.hpp", "SFML/Config.hpp" },
+		"sfml" },
+
+	/* Ogg/Vorbis/Opus */
+	{ { "ogg/ogg.h", "ogg/ogg.h", "ogg/ogg.h" },
+		"ogg" },
+	{ { "vorbis/codec.h", "vorbis/codec.h", "vorbis/codec.h" },
+		"vorbis" },
+	{ { "vorbis/vorbisenc.h", "vorbis/vorbisenc.h", "vorbis/vorbisenc.h" },
+		"vorbisenc" },
+	{ { "vorbis/vorbisfile.h", "vorbis/vorbisfile.h", "vorbis/vorbisfile.h" },
+		"vorbisfile" },
+	{ { "opus/opus.h", "opus/opus.h", "opus/opus.h" },
+		"opus" },
+	{ { "opus/opusenc.h", "opus/opusenc.h", "opus/opusenc.h" },
+		"opusenc" },
+	{ { "opus/opusfile.h", "opus/opusfile.h", "opus/opusfile.h" },
+		"opusfile" },
+
+	/* Windows */
+	{ { "winuser.h", (const char *)0, (const char *)0 },
+		"user32" },
+	{ { "winbase.h", (const char *)0, (const char *)0 },
+		"kernel32" },
+	{ { "shellapi.h", (const char *)0, (const char *)0 },
+		"shell32" },
+	{ { "ole.h", (const char *)0, (const char *)0 },
+		"ole32" },
+	{ { "commctrl.h", (const char *)0, (const char *)0 },
+		"comctl32" },
+	{ { "commdlg.h", (const char *)0, (const char *)0 },
+		"comdlg32" },
+	{ { "wininet.h", (const char *)0, (const char *)0 },
+		"wininet" },
+	{ { "mmsystem.h", (const char *)0, (const char *)0 },
+		"winmm" },
+	{ { "uxtheme.h", (const char *)0, (const char *)0 },
+		"uxtheme" },
+	{ { "wingdi.h", (const char *)0, (const char *)0 },
+		"gdi32" },
+	{ { "winsock2.h", (const char *)0, (const char *)0 },
+		"winsock2" },
+
+	/* POSIX */
+	{ { (const char *)0, "time.h", "time.h" },
+		"realtime" },
+	{ { (const char *)0, "math.h", "math.h" },
+		"math" },
+
+	/* PNG */
+	{ { "png.h", "png.h", "png.h" },
+		"png" },
+
+	/* BZip2 */
+	{ { "bzlib.h", "bzlib.h", "bzlib.h" },
+		"bzip2" },
+
+	/* ZLib */
+	{ { "zlib.h", "zlib.h", "zlib.h" },
+		"z" },
+
+	/* PThread */
+	{ { "pthread.h", "pthread.h", "pthread.h" },
+		"pthread" },
+
+	/* Curses */
+	{ { "curses.h", "curses.h", "curses.h" },
+		"curses" },
+};
+static const struct { const char *const lib, *const flags[3]; } libs[] = {
+	/* OpenGL (and friends) */
+	{ "opengl",
+		{ "-lopengl32", "-lGL", "-framework OpenGL" } },
+	{ "glu",
+		{ "-lglu32", "-lGLU", "-lGLU" } },
+	{ "glfw",
+		{ "-lglfw", "-lglfw", "-lglfw" } },
+	{ "glfw3",
+		{ "-lglfw", "-lglfw", "-lglfw" } },
+	{ "glew",
+		{ "-lglew32", "-lGLEW", "-lGLEW" } },
+
+	/* Vulkan */
+	{ "vulkan",
+		{ "-lvulkan", "-lvulkan", "-lvulkan" } },
+
+	/* SDL */
+	{ "sdl",
+		{ "-lSDL", "-lSDL", "-lSDL" } },
+	{ "sdl_mixer",
+		{ "-lSDL_mixer", "-lSDL_mixer", "-lSDL_mixer" } },
+	{ "sdl_main",
+		{ "-lSDLmain", "-lSDLmain", "-lSDLmain" } },
+
+	/* SDL2 - EXPERIMENTAL */
+	{ "sdl2",
+		{ "-lSDL2 -luser32 -lkernel32 -lshell32 -lole32 -lwininet -lwinmm"
+			" -limm32 -lgdi32 -loleaut32 -lversion -luuid",
+			"-lSDL2", "-lSDL2" } },
+
+	/* SFML */
+	{ "sfml",
+		{ "-lsfml-window-s -lsfml-graphics-s -lsfml-audio-s"
+			" -lsfml-network-s -lsfml-main -lsfml-system-s",
+			"-lsfml-window-s -lsfml-graphics-s -lsfml-audio-s"
+			" -lsfml-network-s -lsfml-main -lsfml-system-s",
+			"-lsfml-window-s -lsfml-graphics-s -lsfml-audio-s"
+			" -lsfml-network-s -lsfml-main -lsfml-system-s" } },
+
+	/* Ogg/Vorbis/Opus */
+	{ "ogg",
+		{ "-logg", "-logg", "-logg" } },
+	{ "vorbis",
+		{ "-lvorbis", "-lvorbis", "-lvorbis" } },
+	{ "vorbisenc",
+		{ "-lvorbisenc", "-lvorbisenc", "-lvorbisenc" } },
+	{ "vorbisfile",
+		{ "-lvorbisfile", "-lvorbisfile", "-lvorbisfile" } },
+	{ "opus",
+		{ "-lopus", "-lopus", "-lopus" } },
+	{ "opusenc",
+		{ "-lopusenc", "-lopusenc", "-lopusenc" } },
+	{ "opusfile",
+		{ "-lopusfile", "-lopusfile", "-lopusfile" } },
+
+	/* Windows */
+	{ "user32",
+		{ "-luser32", (const char *)0, (const char *)0 } },
+	{ "kernel32",
+		{ "-lkernel32", (const char *)0, (const char *)0 } },
+	{ "shell32",
+		{ "-lshell32", (const char *)0, (const char *)0 } },
+	{ "ole32",
+		{ "-lole32", (const char *)0, (const char *)0 } },
+	{ "comctl32",
+		{ "-lcomctl32", (const char *)0, (const char *)0 } },
+	{ "comdlg32",
+		{ "-lcomdlg32", (const char *)0, (const char *)0 } },
+	{ "wininet",
+		{ "-lwininet", (const char *)0, (const char *)0 } },
+	{ "winmm",
+		{ "-lwinmm", (const char *)0, (const char *)0 } },
+	{ "uxtheme",
+		{ "-luxtheme", (const char *)0, (const char *)0 } },
+	{ "gdi32",
+		{ "-lgdi32", (const char *)0, (const char *)0 } },
+	{ "winsock2",
+		{ "-lws2_32", (const char *)0, (const char *)0 } },
+
+	/* POSIX */
+	{ "realtime",
+		{ (const char *)0, "-lrt", (const char *)0 } },
+	{ "math",
+		{ (const char *)0, "-lm", "-lm" } },
+
+	/* PNG */
+	{ "png",
+		{ "-lpng", "-lpng", "-lpng" } },
+
+	/* BZip2 */
+	{ "bzip2",
+		{ "-lbzip2", "-lbzip2", "-lbzip2" } },
+
+	/* ZLib */
+	{ "z",
+		{ "-lz", "-lz", "-lz" } },
+
+	/* PThread */
+	{ "pthread",
+		{ "-lpthread", "-lpthread", "-lpthread" } },
+
+	/* Curses */
+	{ "curses",
+		{ "-lncurses", "-lncurses", "-lncurses" } }
+};
+
 MkStrList mk__g_targets  = (MkStrList)0;
 MkStrList mk__g_srcdirs  = (MkStrList)0;
 MkStrList mk__g_incdirs  = (MkStrList)0;
@@ -46,6 +261,8 @@ MkStrList mk__g_dllsdirs = (MkStrList)0;
 
 bitfield_t mk__g_flags          = 0;
 MkColorMode_t mk__g_flags_color = MK__DEFAULT_COLOR_MODE_IMPL;
+
+MkActions mk__g_actions = { .len = 0, .ptr = (MkAction *)0 };
 
 void mk_front_pushSrcDir( const char *srcdir ) {
 	if( !mk_fs_isDir( srcdir ) ) {
@@ -110,268 +327,217 @@ void mk_fs_unwindDirs( void ) {
 	}
 }
 
-void mk_main_init( int argc, char **argv ) {
-	static const struct { const char *const header[3], *const lib; } autolinks[] = {
-		/* OpenGL */
-		{ { "GL/gl.h", "GL/gl.h", "OpenGL/OpenGL.h" },
-		    "opengl" },
-		{ { (const char *)0, (const char *)0, "GL/gl.h" },
-		    "opengl" },
-		{ { (const char *)0, (const char *)0, "OpenGL/gl.h" },
-		    "opengl" },
+static int strEqAnyUntilNull( const char *a, ... ) {
+	const char *b;
+	const char *adash;
+	va_list args;
+	int r;
 
-		/* OpenGL - GLU */
-		{ { "GL/glu.h", "GL/glu.h", "OpenGL/glu.h" },
-		    "glu" },
+	adash = a;
+	while( *adash == '-' ) {
+		++adash;
+	}
 
-		/* OpenGL - GLFW/GLEW */
-		{ { "GL/glfw.h", "GL/glfw.h", "GL/glfw.h" },
-		    "glfw" },
-		{ { "GLFW/glfw3.h", "GLFW/glfw3.h", "GLFW/glfw3.h" },
-			"glfw3" },
-		{ { "GL/glew.h", "GL/glew.h", "GL/glew.h" },
-		    "glew" },
+	if( *adash == '\0' ) {
+		return 0;
+	}
 
-		/* Vulkan */
-		{ { "vulkan/vulkan.h", "vulkan/vulkan.h", "vulkan/vulkan.h" },
-			"vulkan" },
+	va_start( args, a );
+	r = 0;
+	while( ( b = va_arg( args, const char * ) ) != (const char *)0 ) {
+		const char *bdash;
 
-		/* SDL */
-		{ { "SDL/sdl.h", "SDL/sdl.h", "SDL/sdl.h" },
-		    "sdl" },
-		{ { "SDL/sdl_mixer.h", "SDL/sdl_mixer.h", "SDL/sdl_mixer.h" },
-		    "sdl_mixer" },
-		{ { "SDL/sdl_main.h", "SDL/sdl_main.h", "SDL/sdl_main.h" },
-		    "sdl_main" },
+		bdash = b;
+		while( *bdash == '-' ) {
+			++bdash;
+		}
 
-		/* SDL2 - EXPERIMENTAL */
-		{ { "SDL2/SDL.h", "SDL2/SDL.h", "SDL2/SDL.h" },
-		    "sdl2" },
+		if( strcmp( a, b ) == 0 ) {
+			r = 1;
+			break;
+		}
 
-		/* SFML */
-		{ { "SFML/Config.hpp", "SFML/Config.hpp", "SFML/Config.hpp" },
-		    "sfml" },
+		if( bdash != b && strcmp( adash, bdash ) == 0 ) {
+			r = 1;
+			break;
+		}
+	}
+	va_end( args );
 
-		/* Ogg/Vorbis/Opus */
-		{ { "ogg/ogg.h", "ogg/ogg.h", "ogg/ogg.h" },
-		    "ogg" },
-		{ { "vorbis/codec.h", "vorbis/codec.h", "vorbis/codec.h" },
-		    "vorbis" },
-		{ { "vorbis/vorbisenc.h", "vorbis/vorbisenc.h", "vorbis/vorbisenc.h" },
-		    "vorbisenc" },
-		{ { "vorbis/vorbisfile.h", "vorbis/vorbisfile.h", "vorbis/vorbisfile.h" },
-		    "vorbisfile" },
-		{ { "opus/opus.h", "opus/opus.h", "opus/opus.h" },
-			"opus" },
-		{ { "opus/opusenc.h", "opus/opusenc.h", "opus/opusenc.h" },
-			"opusenc" },
-		{ { "opus/opusfile.h", "opus/opusfile.h", "opus/opusfile.h" },
-			"opusfile" },
+	return r;
+}
 
-		/* Windows */
-		{ { "winuser.h", (const char *)0, (const char *)0 },
-		    "user32" },
-		{ { "winbase.h", (const char *)0, (const char *)0 },
-		    "kernel32" },
-		{ { "shellapi.h", (const char *)0, (const char *)0 },
-		    "shell32" },
-		{ { "ole.h", (const char *)0, (const char *)0 },
-		    "ole32" },
-		{ { "commctrl.h", (const char *)0, (const char *)0 },
-		    "comctl32" },
-		{ { "commdlg.h", (const char *)0, (const char *)0 },
-		    "comdlg32" },
-		{ { "wininet.h", (const char *)0, (const char *)0 },
-		    "wininet" },
-		{ { "mmsystem.h", (const char *)0, (const char *)0 },
-		    "winmm" },
-		{ { "uxtheme.h", (const char *)0, (const char *)0 },
-		    "uxtheme" },
-		{ { "wingdi.h", (const char *)0, (const char *)0 },
-		    "gdi32" },
-		{ { "winsock2.h", (const char *)0, (const char *)0 },
-		    "winsock2" },
+static int isAction( MkAction *act, const char *s ) {
+	MkActionType_t *p_ty;
+	MkActionType_t dummyty;
 
-		/* POSIX */
-		{ { (const char *)0, "time.h", "time.h" },
-		    "realtime" },
-		{ { (const char *)0, "math.h", "math.h" },
-		    "math" },
+	MK_ASSERT( s != (const char *)0 );
 
-		/* PNG */
-		{ { "png.h", "png.h", "png.h" },
-		    "png" },
+	if( act != (MkAction *)0 ) {
+		p_ty = &act->type;
+	} else {
+		p_ty = &dummyty;
+	}
 
-		/* BZip2 */
-		{ { "bzlib.h", "bzlib.h", "bzlib.h" },
-		    "bzip2" },
+	if( strEqAnyUntilNull( s, /*"help",*/ "-h", "--help", NULL ) ) {
+		*p_ty = kMkAction_ShowHelp;
+		return 1;
+	}
 
-		/* ZLib */
-		{ { "zlib.h", "zlib.h", "zlib.h" },
-		    "z" },
+	if( strEqAnyUntilNull( s, /*"version",*/ "-v", "--version", NULL ) ) {
+		*p_ty = kMkAction_ShowVersion;
+		return 1;
+	}
 
-		/* PThread */
-		{ { "pthread.h", "pthread.h", "pthread.h" },
-		    "pthread" },
+	if( strEqAnyUntilNull( s, "build", NULL ) ) {
+		*p_ty = kMkAction_BuildTarget;
+		return 1;
+	}
 
-		/* Curses */
-		{ { "curses.h", "curses.h", "curses.h" },
-		    "curses" },
-	};
-	static const struct { const char *const lib, *const flags[3]; } libs[] = {
-		/* OpenGL (and friends) */
-		{ "opengl",
-		    { "-lopengl32", "-lGL", "-framework OpenGL" } },
-		{ "glu",
-		    { "-lglu32", "-lGLU", "-lGLU" } },
-		{ "glfw",
-		    { "-lglfw", "-lglfw", "-lglfw" } },
-		{ "glfw3",
-			{ "-lglfw", "-lglfw", "-lglfw" } },
-		{ "glew",
-		    { "-lglew32", "-lGLEW", "-lGLEW" } },
+	if( strEqAnyUntilNull( s, /*"clean",*/ "-C", "--clean", NULL ) ) {
+		*p_ty = kMkAction_CleanTarget;
+		return 1;
+	}
 
-		/* Vulkan */
-		{ "vulkan",
-			{ "-lvulkan", "-lvulkan", "-lvulkan" } },
+	if( strEqAnyUntilNull( s, /*"test",*/ "-T", "--test", NULL ) ) {
+		*p_ty = kMkAction_TestTarget;
+		return 1;
+	}
 
-		/* SDL */
-		{ "sdl",
-		    { "-lSDL", "-lSDL", "-lSDL" } },
-		{ "sdl_mixer",
-		    { "-lSDL_mixer", "-lSDL_mixer", "-lSDL_mixer" } },
-		{ "sdl_main",
-		    { "-lSDLmain", "-lSDLmain", "-lSDLmain" } },
+	return 0;
+}
+static int actionExpectsTarget( MkActionType_t ty ) {
+	switch( ty ) {
+	case kMkAction_BuildTarget:
+	case kMkAction_CleanTarget:
+	case kMkAction_TestTarget:
+		return 1;
 
-		/* SDL2 - EXPERIMENTAL */
-		{ "sdl2",
-		    { "-lSDL2 -luser32 -lkernel32 -lshell32 -lole32 -lwininet -lwinmm"
-		      " -limm32 -lgdi32 -loleaut32 -lversion -luuid",
-		        "-lSDL2", "-lSDL2" } },
+	default:
+		break;
+	}
 
-		/* SFML */
-		{ "sfml",
-		    { "-lsfml-window-s -lsfml-graphics-s -lsfml-audio-s"
-		      " -lsfml-network-s -lsfml-main -lsfml-system-s",
-		        "-lsfml-window-s -lsfml-graphics-s -lsfml-audio-s"
-		        " -lsfml-network-s -lsfml-main -lsfml-system-s",
-		        "-lsfml-window-s -lsfml-graphics-s -lsfml-audio-s"
-		        " -lsfml-network-s -lsfml-main -lsfml-system-s" } },
+	return 0;
+}
 
-		/* Ogg/Vorbis/Opus */
-		{ "ogg",
-		    { "-logg", "-logg", "-logg" } },
-		{ "vorbis",
-		    { "-lvorbis", "-lvorbis", "-lvorbis" } },
-		{ "vorbisenc",
-		    { "-lvorbisenc", "-lvorbisenc", "-lvorbisenc" } },
-		{ "vorbisfile",
-		    { "-lvorbisfile", "-lvorbisfile", "-lvorbisfile" } },
-		{ "opus",
-			{ "-lopus", "-lopus", "-lopus" } },
-		{ "opusenc",
-			{ "-lopusenc", "-lopusenc", "-lopusenc" } },
-		{ "opusfile",
-			{ "-lopusfile", "-lopusfile", "-lopusfile" } },
+static int parseAction( MkAction *act, int *p_i, int argc, const char **argv ) {
+	int i, i_begin;
+	int acceptsTargets;
+	int expectingTarget;
+	int endOfAction;
 
-		/* Windows */
-		{ "user32",
-		    { "-luser32", (const char *)0, (const char *)0 } },
-		{ "kernel32",
-		    { "-lkernel32", (const char *)0, (const char *)0 } },
-		{ "shell32",
-		    { "-lshell32", (const char *)0, (const char *)0 } },
-		{ "ole32",
-		    { "-lole32", (const char *)0, (const char *)0 } },
-		{ "comctl32",
-		    { "-lcomctl32", (const char *)0, (const char *)0 } },
-		{ "comdlg32",
-		    { "-lcomdlg32", (const char *)0, (const char *)0 } },
-		{ "wininet",
-		    { "-lwininet", (const char *)0, (const char *)0 } },
-		{ "winmm",
-		    { "-lwinmm", (const char *)0, (const char *)0 } },
-		{ "uxtheme",
-		    { "-luxtheme", (const char *)0, (const char *)0 } },
-		{ "gdi32",
-		    { "-lgdi32", (const char *)0, (const char *)0 } },
-		{ "winsock2",
-		    { "-lws2_32", (const char *)0, (const char *)0 } },
+	MK_ASSERT( act != (MkAction *)0 );
+	MK_ASSERT( argv != (const char **)0 );
+	MK_ASSERT( p_i != (int *)0 );
 
-		/* POSIX */
-		{ "realtime",
-		    { (const char *)0, "-lrt", (const char *)0 } },
-		{ "math",
-		    { (const char *)0, "-lm", "-lm" } },
+	i = *p_i;
+	MK_ASSERT( i <= argc );
+	MK_ASSERT( i >= 0 );
 
-		/* PNG */
-		{ "png",
-		    { "-lpng", "-lpng", "-lpng" } },
+	if( i == argc ) {
+		return 0;
+	}
 
-		/* BZip2 */
-		{ "bzip2",
-		    { "-lbzip2", "-lbzip2", "-lbzip2" } },
+	if( !isAction( act, argv[i] ) ) {
+		return 0;
+	}
 
-		/* ZLib */
-		{ "z",
-		    { "-lz", "-lz", "-lz" } },
+	expectingTarget = actionExpectsTarget( act->type );
+	acceptsTargets  = expectingTarget;
 
-		/* PThread */
-		{ "pthread",
-		    { "-lpthread", "-lpthread", "-lpthread" } },
+	i_begin     = i++;
+	endOfAction = 0;
+	while( i < argc ) {
+		if( expectingTarget ) {
+			++i;
+			expectingTarget = 0;
+			continue;
+		}
 
-		/* Curses */
-		{ "curses",
-		    { "-lncurses", "-lncurses", "-lncurses" } }
-	};
-	const char *optlinks[256], *p;
-	bitfield_t bit;
-	MkAutolink al;
-	size_t j;
-	MkLib lib;
+		if( acceptsTargets && strEqAnyUntilNull( argv[i], "--target", "--config", NULL ) ) {
+			++i;
+			expectingTarget = 1;
+			continue;
+		}
+
+		if( strcmp( argv[i], "--end-action" ) == 0 ) {
+			endOfAction = 1;
+			break;
+		}
+
+		if( isAction( (MkAction *)0, argv[i] ) ) {
+			break;
+		}
+
+		++i;
+	}
+
+	act->argc =    i - i_begin;
+	act->argv = argv + i_begin;
+
+	if( endOfAction ) {
+		++i;
+	}
+
+	*p_i = i;
+
+	return 1;
+}
+
+typedef enum {
+	kCheckForAction_No,
+	kCheckForAction_Yes
+} checkForAction_t;
+typedef enum {
+	kAcceptTargets_No,
+	kAcceptTargets_Yes
+} acceptTargets_t;
+static void processSharedArguments( int argc, const char **argv, checkForAction_t check, acceptTargets_t acceptTargets ) {
+	static const char *optlinks[256];
+	static int didinitoptlinks = 0;
+
+	const char *p, *arg;
 	char temp[PATH_MAX];
-	int builtinautolinks = 1, userautolinks = 1;
 	int i, op;
+	int acceptingTargets;
 
-	/* core initialization */
-	mk_sys_initColoredOutput();
-	atexit( mk_sl_deleteAll );
-	mk_fs_init();
-	atexit( mk_fs_unwindDirs );
-	atexit( mk_al_deleteAll );
-	atexit( mk_dep_deleteAll );
-	atexit( mk_prj_deleteAll );
-	mk_bld_initUnitTestArrays();
+	if( !didinitoptlinks ) {
+		didinitoptlinks = 1;
 
-	/* set single-character options here */
-	memset( (void *)optlinks, 0, sizeof( optlinks ) );
-	optlinks['h'] = "help";
-	optlinks['v'] = "version";
-	optlinks['V'] = "verbose";
-	optlinks['r'] = "release";
-	optlinks['R'] = "rebuild";
-	optlinks['c'] = "compile-only";
-	optlinks['b'] = "brush";
-	optlinks['C'] = "clean";
-	optlinks['H'] = "print-hierarchy";
-	optlinks['p'] = "pedantic";
-	optlinks['T'] = "test";
-	optlinks['D'] = "dir";
+		memset( (void *)optlinks, 0, sizeof( optlinks ) );
 
-	/* arrays need to be initialized */
-	mk__g_targets  = mk_sl_new();
-	mk__g_srcdirs  = mk_sl_new();
-	mk__g_incdirs  = mk_sl_new();
-	mk__g_libdirs  = mk_sl_new();
-	mk__g_pkgdirs  = mk_sl_new();
-	mk__g_tooldirs = mk_sl_new();
-	mk__g_dllsdirs = mk_sl_new();
+		optlinks['V'] = "verbose";
+		optlinks['r'] = "release";
+		optlinks['H'] = "print-hierarchy";
+		optlinks['p'] = "pedantic";
+		optlinks['D'] = "dir";
+	}
 
-	/* process command line arguments */
+	acceptingTargets = +( acceptTargets == kAcceptTargets_Yes );
+
 	for( i = 1; i < argc; i++ ) {
+#define REMOVE_ARG() do { arg = argv[i]; argv[i] = (const char *)0; } while(0)
 		const char *opt;
 
 		opt = argv[i];
+		temp[0] = '\0';
+
+		if( check == kCheckForAction_Yes ) {
+			MkAction act;
+
+			if( parseAction( &act, &i, argc, argv ) ) {
+				if( act.type == kMkAction_ShowHelp ) {
+					mk__g_flags |= kMkFlag_ShowHelp_Bit;
+				} else if( act.type == kMkAction_ShowVersion ) {
+					mk__g_flags |= kMkFlag_ShowVersion_Bit;
+				}
+				mk_arr_append( mk__g_actions, act );
+
+				--i;
+				continue;
+			}
+		}
+
 		if( *opt == '-' ) {
 			op = 0;
 			p  = (const char *)0;
@@ -390,6 +556,7 @@ void mk_main_init( int argc, char **argv ) {
 				}
 			} else {
 				if( *( opt + 1 ) == 'I' ) {
+					REMOVE_ARG();
 					if( *( opt + 2 ) == 0 ) {
 						p = argv[++i];
 					} else {
@@ -398,6 +565,7 @@ void mk_main_init( int argc, char **argv ) {
 
 					opt = "incdir";
 				} else if( *( opt + 1 ) == 'L' ) {
+					REMOVE_ARG();
 					if( *( opt + 2 ) == 0 ) {
 						p = argv[++i];
 					} else {
@@ -406,6 +574,7 @@ void mk_main_init( int argc, char **argv ) {
 
 					opt = "libdir";
 				} else if( *( opt + 1 ) == 'S' ) {
+					REMOVE_ARG();
 					if( *( opt + 2 ) == 0 ) {
 						p = argv[++i];
 					} else {
@@ -414,6 +583,7 @@ void mk_main_init( int argc, char **argv ) {
 
 					opt = "srcdir";
 				} else if( *( opt + 1 ) == 'P' ) {
+					REMOVE_ARG();
 					if( *( opt + 2 ) == 0 ) {
 						p = argv[++i];
 					} else {
@@ -437,47 +607,55 @@ void mk_main_init( int argc, char **argv ) {
 
 			MK_ASSERT( opt != (const char *)0 );
 
-			bit = 0;
-			if( !strcmp( opt, "help" ) ) {
-				bit = kMkFlag_ShowHelp_Bit;
-			} else if( !strcmp( opt, "version" ) ) {
-				bit = kMkFlag_ShowVersion_Bit;
-			} else if( !strcmp( opt, "verbose" ) ) {
-				bit = kMkFlag_Verbose_Bit;
-			} else if( !strcmp( opt, "release" ) ) {
-				bit = kMkFlag_Release_Bit;
-			} else if( !strcmp( opt, "rebuild" ) ) {
-				bit = kMkFlag_Rebuild_Bit;
-			} else if( !strcmp( opt, "compile-only" ) ) {
-				bit = kMkFlag_NoLink_Bit;
-			} else if( !strcmp( opt, "brush" ) ) {
-				bit = kMkFlag_NoCompile_Bit | kMkFlag_NoLink_Bit | kMkFlag_LightClean_Bit;
-			} else if( !strcmp( opt, "clean" ) ) {
-				bit = kMkFlag_NoCompile_Bit | kMkFlag_NoLink_Bit | kMkFlag_FullClean_Bit;
-			} else if( !strcmp( opt, "print-hierarchy" ) ) {
-				bit = kMkFlag_PrintHierarchy_Bit;
-			} else if( !strcmp( opt, "pedantic" ) ) {
-				bit = kMkFlag_Pedantic_Bit;
-			} else if( !strcmp( opt, "test" ) ) {
-				bit = kMkFlag_Test_Bit;
-			} else if( !strcmp( opt, "pthread" ) ) {
-				bit = kMkFlag_OutSingleThread_Bit;
-				op  = !op;
-			} else if( !strcmp( opt, "color" ) ) {
+#define PROCESS_BIT(b) \
+	REMOVE_ARG();\
+	\
+	if( op ) {\
+		mk__g_flags &= ~(b);\
+	} else {\
+		mk__g_flags |= (b);\
+	}\
+	\
+	continue
+
+			if( !strcmp( opt, "verbose" ) ) {
+				PROCESS_BIT(kMkFlag_Verbose_Bit);
+			}
+
+			if( !strcmp( opt, "release" ) ) {
+				PROCESS_BIT(kMkFlag_Release_Bit);
+			}
+
+			if( !strcmp( opt, "print-hierarchy" ) ) {
+				PROCESS_BIT(kMkFlag_PrintHierarchy_Bit);
+			}
+
+			if( !strcmp( opt, "pedantic" ) ) {
+				PROCESS_BIT(kMkFlag_Pedantic_Bit);
+			}
+
+			if( !strcmp( opt, "color" ) ) {
+				REMOVE_ARG();
 				if( op ) {
 					mk__g_flags_color = kMkColorMode_None;
 				} else {
 					mk__g_flags_color = MK__DEFAULT_COLOR_MODE_IMPL;
 				}
 				continue;
-			} else if( !strcmp( opt, "ansi-colors" ) ) {
+			}
+
+			if( !strcmp( opt, "ansi-colors" ) ) {
+				REMOVE_ARG();
 				if( op ) {
 					mk__g_flags_color = kMkColorMode_None;
 				} else {
 					mk__g_flags_color = kMkColorMode_ANSI;
 				}
 				continue;
-			} else if( !strcmp( opt, "win32-colors" ) ) {
+			}
+
+			if( !strcmp( opt, "win32-colors" ) ) {
+				REMOVE_ARG();
 #if MK_WINDOWS_COLORS_ENABLED
 				if( op ) {
 					mk__g_flags_color = kMkColorMode_None;
@@ -488,131 +666,250 @@ void mk_main_init( int argc, char **argv ) {
 				mk_log_errorMsg( "option \"--[no-]win32-colors\" is disabled in this build" );
 #endif
 				continue;
-			} else if( !strcmp( opt, "builtin-autolinks" ) ) {
-				builtinautolinks = (int)!op;
-				continue;
-			} else if( !strcmp( opt, "user-autolinks" ) ) {
-				userautolinks = (int)!op;
-				continue;
-			} else if( !strcmp( opt, "srcdir" ) ) {
-				if( i + 1 == argc && !p ) {
-					mk_log_errorMsg( mk_com_va( "expected argument to ^E'%s'^&", argv[i] ) );
+			}
+
+#define PROCESS_DIR_ARG() \
+	REMOVE_ARG();\
+	\
+	if( i + 1 == argc && !p ) {\
+		mk_log_errorMsg( mk_com_va( "expected argument to ^E'%s'^&", arg ) );\
+		continue;\
+	}\
+	\
+	((void)0)
+
+			if( acceptingTargets ) {
+				if( !strcmp( opt, "srcdir" ) ) {
+					PROCESS_DIR_ARG();
+					mk_front_pushSrcDir( p ? p : argv[++i] );
 					continue;
 				}
 
-				mk_front_pushSrcDir( p ? p : argv[++i] );
-				continue;
-			} else if( !strcmp( opt, "incdir" ) ) {
-				if( i + 1 == argc && !p ) {
-					mk_log_errorMsg( mk_com_va( "expected argument to ^E'%s'^&", argv[i] ) );
+				if( !strcmp( opt, "incdir" ) ) {
+					PROCESS_DIR_ARG();
+					mk_front_pushIncDir( p ? p : argv[++i] );
 					continue;
 				}
 
-				mk_front_pushIncDir( p ? p : argv[++i] );
-				continue;
-			} else if( !strcmp( opt, "libdir" ) ) {
-				if( i + 1 == argc && !p ) {
-					mk_log_errorMsg( mk_com_va( "expected argument to ^E'%s'^&", argv[i] ) );
+				if( !strcmp( opt, "libdir" ) ) {
+					PROCESS_DIR_ARG();
+					mk_front_pushLibDir( p ? p : argv[++i] );
 					continue;
 				}
 
-				mk_front_pushLibDir( p ? p : argv[++i] );
-				continue;
-			} else if( !strcmp( opt, "pkgdir" ) ) {
-				if( i + 1 == argc && !p ) {
-					mk_log_errorMsg( mk_com_va( "expected argument to ^E'%s'^&", argv[i] ) );
+				if( !strcmp( opt, "pkgdir" ) ) {
+					PROCESS_DIR_ARG();
+					mk_front_pushPkgDir( p ? p : argv[++i] );
 					continue;
 				}
 
-				mk_front_pushPkgDir( p ? p : argv[++i] );
-				continue;
-			} else if( !strcmp( opt, "toolsdir" ) ) {
-				if( i + 1 == argc && !p ) {
-					mk_log_errorMsg( mk_com_va( "expected argument to ^E'%s'^&", argv[i] ) );
+				if( !strcmp( opt, "toolsdir" ) ) {
+					PROCESS_DIR_ARG();
+					mk_front_pushToolDir( p ? p : argv[++i] );
 					continue;
 				}
 
-				mk_front_pushToolDir( p ? p : argv[++i] );
-				continue;
-			} else if( !strcmp( opt, "dllsdir" ) ) {
-				if( i + 1 == argc && !p ) {
-					mk_log_errorMsg( mk_com_va( "expected argument to ^E'%s'^&", argv[i] ) );
+				if( !strcmp( opt, "dllsdir" ) ) {
+					PROCESS_DIR_ARG();
+					mk_front_pushDynamicLibsDir( p ? p : argv[++i] );
 					continue;
 				}
 
-				mk_front_pushDynamicLibsDir( p ? p : argv[++i] );
-				continue;
-			} else if( !strcmp( opt, "dir" ) ) {
-				if( i + 1 == argc && !p ) {
-					mk_log_errorMsg( mk_com_va( "expected argument to ^E'%s'^&", argv[i] ) );
+				if( !strcmp( opt, "target" ) ) {
+					char *q;
+
+					REMOVE_ARG();
+
+					if( temp[0] == '\0' ) {
+						if( i + 1 == argc ) {
+							mk_log_errorMsg( mk_com_va( "expecting argument to ^E'%s'^&", arg ) );
+							continue;
+						}
+
+						++i;
+						mk_com_strcpy( temp, sizeof(temp), argv[ i ] );
+					}
+
+					if( ( q = strchr( temp, ':' ) ) != (const char *)0 ) {
+						*q = '\0';
+						mk_sl_pushBack( mk__g_targets, temp );
+						*q = ':';
+
+						mk_com_strcpy( temp, sizeof(temp), q + 1 );
+						/* FIXME: How to specify a configuration for a given target */
+						mk_log_errorMsg( mk_com_va( "explicit configuration option not yet supported: %s", temp ) );
+					} else {
+						mk_sl_pushBack( mk__g_targets, opt );
+					}
+
 					continue;
 				}
 
+				if( !strcmp( opt, "config" ) ) {
+					REMOVE_ARG();
+
+					if( temp[0] == '\0' ) {
+						if( i + 1 == argc ) {
+							mk_log_errorMsg( mk_com_va( "expecting argument to ^E'%s'^&", arg ) );
+							continue;
+						}
+
+						++i;
+						mk_com_strcpy( temp, sizeof(temp), argv[ i ] );
+					}
+
+					/* FIXME: How to specify a configuration for a given target */
+					mk_log_errorMsg( mk_com_va( "explicit configuration option not yet supported: %s", temp ) );
+					continue;
+				}
+			} /* if acceptingTargets */
+
+			if( !strcmp( opt, "dir" ) ) {
+				PROCESS_DIR_ARG();
 				mk_fs_enter( p ? p : argv[++i] );
 				continue;
-			} else {
-				mk_log_errorMsg( mk_com_va( "unknown option ^E'%s'^&; ignoring", argv[i] ) );
-				continue;
 			}
+#undef PROCESS_DIR_ARG
+		} else /* opt[0] == '-' */ if( acceptingTargets ) {
+			REMOVE_ARG();
 
-			MK_ASSERT( bit != 0 );
-			MK_ASSERT( op == 0 || op == 1 );
+			if( ( p = strchr( opt, ':' ) ) != (const char *)0 ) {
+				mk_com_strncpy( temp, sizeof(temp), opt, (size_t)(ptrdiff_t)( p - opt ) );
+				mk_sl_pushBack( mk__g_targets, temp );
 
-			if( op ) {
-				mk__g_flags &= ~bit;
+				mk_com_strcpy( temp, sizeof(temp), p + 1 );
+				/* FIXME: How to specify a configuration for a given target */
+				mk_log_errorMsg( mk_com_va( "explicit configuration option not yet supported: %s", temp ) );
 			} else {
-				mk__g_flags |= bit;
+				mk_sl_pushBack( mk__g_targets, opt );
 			}
-		} else {
-			mk_sl_pushBack( mk__g_targets, opt );
 		}
 	}
+}
+
+static void showHelp(void) {
+	static int didshow = 0;
+
+	if( didshow ) {
+		return;
+	}
+
+	didshow = 1;
+
+	printf( "Usage: mk [options...] [targets...]\n" );
+	printf( "Options:\n" );
+	printf( "  -h,--help                Show this help message.\n" );
+	printf( "  -v,--version             Show the version.\n" );
+	printf( "  -V,--verbose             Show the commands invoked.\n" );
+	printf( "  -b,--brush               Remove intermediate files after "
+			"building.\n" );
+	printf( "  -C,--clean               Remove \"%s\"\n", mk_opt_getObjdirBase() );
+	printf( "  -r,--release             Build in release mode.\n" );
+	printf( "  -R,--rebuild             "
+			"Force a rebuild, without cleaning.\n" );
+	printf( "  -T,--test                Run unit tests.\n" );
+	printf( "  -c,--compile-only        Just compile; do not link.\n" );
+	printf( "  -p,--pedantic            Enable pedantic warnings.\n" );
+	printf( "  --[no-]pthread           Enable -pthread compiler flag [default].\n" );
+	printf( "  -H,--print-hierarchy     Display the project hierarchy.\n" );
+	printf( "  -S,--srcdir=<dir>        Add a source directory.\n" );
+	printf( "  -I,--incdir=<dir>        Add an include directory.\n" );
+	printf( "  -L,--libdir=<dir>        Add a library directory.\n" );
+	printf( "  -P,--pkgdir=<dir>        Add a package directory.\n" );
+	printf( "  --[no-]color             Enable or disable colored output.\n" );
+	printf( "    --ansi-colors          Enable ANSI-based coloring.\n" );
+#if MK_WINDOWS_COLORS_ENABLED
+	printf( "    --win32-colors         Enable Windows-based coloring.\n" );
+#endif
+	printf( "  --[no-]builtin-autolinks Enable built-in autolinks (default).\n" );
+	printf( "  --[no-]user-autolinks    Enable loading of mk-autolinks.txt (default).\n" );
+	printf( "\n" );
+	printf( "See the documentation (or source code) for more details.\n" );
+}
+
+static void showVersion(void) {
+	static int didshow = 0;
+
+	if( didshow ) {
+		return;
+	}
+
+	didshow = 1;
+
+	printf(
+		"mk " MK_VERSION_STR " - compiled %s\nCopyright (c) 2012-2021 NotKyon\n\n"
+		"This software contains ABSOLUTELY NO WARRANTY.\n\n",
+		__DATE__ );
+}
+
+static void processActions(void) {
+	size_t i;
+
+	mk_arr_for(mk__g_actions, i) {
+		MkAction *act;
+
+		act = &mk_arr_at( mk__g_actions, i );
+
+		switch( act->type ) {
+		case kMkAction_ShowHelp:
+			/* FIXME: Check for specific items to give extra help on */
+			showHelp();
+			break;
+
+		case kMkAction_ShowVersion:
+			showVersion();
+			break;
+
+		case kMkAction_BuildTarget:
+			processSharedArguments( act->argc, act->argv, kCheckForAction_No, kAcceptTargets_Yes );
+			break;
+
+		case kMkAction_CleanTarget:
+			processSharedArguments( act->argc, act->argv, kCheckForAction_No, kAcceptTargets_Yes );
+			break;
+
+		case kMkAction_TestTarget:
+			processSharedArguments( act->argc, act->argv, kCheckForAction_No, kAcceptTargets_Yes );
+			break;
+		}
+	}
+}
+
+void mk_main_init( int argc, char **argv ) {
+	MkAutolink al;
+	size_t j;
+	MkLib lib;
+	int builtinautolinks = 1, userautolinks = 1;
+
+	/* core initialization */
+	mk_arr_init( mk__g_actions );
+	atexit( mk_main_fini );
+	mk_sys_initColoredOutput();
+	mk_fs_init();
+	atexit( mk_fs_unwindDirs );
+	atexit( mk_al_deleteAll );
+	atexit( mk_dep_deleteAll );
+	atexit( mk_prj_deleteAll );
+	mk_bld_initUnitTestArrays();
+
+	/* string-lists need to be initialized */
+	mk__g_targets  = mk_sl_new();
+	mk__g_srcdirs  = mk_sl_new();
+	mk__g_incdirs  = mk_sl_new();
+	mk__g_libdirs  = mk_sl_new();
+	mk__g_pkgdirs  = mk_sl_new();
+	mk__g_tooldirs = mk_sl_new();
+	mk__g_dllsdirs = mk_sl_new();
+
+	/* process command line arguments */
+	processSharedArguments( argc, (const char **)argv, kCheckForAction_Yes, kAcceptTargets_No );
 
 	/* support "clean rebuilds" */
 	if( ( mk__g_flags & kMkFlag_Rebuild_Bit ) && ( mk__g_flags & ( kMkFlag_LightClean_Bit | kMkFlag_FullClean_Bit ) ) ) {
 		mk__g_flags &= ~( kMkFlag_NoCompile_Bit | kMkFlag_NoLink_Bit );
 	}
 
-	/* show the version */
-	if( mk__g_flags & kMkFlag_ShowVersion_Bit ) {
-		printf(
-		    "mk " MK_VERSION_STR " - compiled %s\nCopyright (c) 2012-2021 NotKyon\n\n"
-		    "This software contains ABSOLUTELY NO WARRANTY.\n\n",
-		    __DATE__ );
-	}
-
-	/* show the help */
-	if( mk__g_flags & kMkFlag_ShowHelp_Bit ) {
-		printf( "Usage: mk [options...] [targets...]\n" );
-		printf( "Options:\n" );
-		printf( "  -h,--help                Show this help message.\n" );
-		printf( "  -v,--version             Show the version.\n" );
-		printf( "  -V,--verbose             Show the commands invoked.\n" );
-		printf( "  -b,--brush               Remove intermediate files after "
-		        "building.\n" );
-		printf( "  -C,--clean               Remove \"%s\"\n", mk_opt_getObjdirBase() );
-		printf( "  -r,--release             Build in release mode.\n" );
-		printf( "  -R,--rebuild             "
-		        "Force a rebuild, without cleaning.\n" );
-		printf( "  -T,--test                Run unit tests.\n" );
-		printf( "  -c,--compile-only        Just compile; do not link.\n" );
-		printf( "  -p,--pedantic            Enable pedantic warnings.\n" );
-		printf( "  --[no-]pthread           Enable -pthread compiler flag [default].\n" );
-		printf( "  -H,--print-hierarchy     Display the project hierarchy.\n" );
-		printf( "  -S,--srcdir=<dir>        Add a source directory.\n" );
-		printf( "  -I,--incdir=<dir>        Add an include directory.\n" );
-		printf( "  -L,--libdir=<dir>        Add a library directory.\n" );
-		printf( "  -P,--pkgdir=<dir>        Add a package directory.\n" );
-		printf( "  --[no-]color             Enable or disable colored output.\n" );
-		printf( "    --ansi-colors          Enable ANSI-based coloring.\n" );
-#if MK_WINDOWS_COLORS_ENABLED
-		printf( "    --win32-colors         Enable Windows-based coloring.\n" );
-#endif
-		printf( "  --[no-]builtin-autolinks Enable built-in autolinks (default).\n" );
-		printf( "  --[no-]user-autolinks    Enable loading of mk-autolinks.txt (default).\n" );
-		printf( "\n" );
-		printf( "See the documentation (or source code) for more details.\n" );
-	}
+	processActions();
 
 	/* exit if no targets were specified and a message was requested */
 	if( mk__g_flags & ( kMkFlag_ShowVersion_Bit | kMkFlag_ShowHelp_Bit ) && !mk_sl_getSize( mk__g_targets ) ) {
@@ -676,4 +973,9 @@ void mk_main_init( int argc, char **argv ) {
 	if( !mk_sl_getSize( mk__g_srcdirs ) && !mk_sl_getSize( mk__g_pkgdirs ) ) {
 		mk_log_fatalError( "no source ('src' or 'source') or package ('pkg') directories" );
 	}
+}
+
+void mk_main_fini( void ) {
+	mk_sl_deleteAll();
+	mk_arr_fini( mk__g_actions );
 }
